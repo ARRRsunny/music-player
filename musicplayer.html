@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player with Synchronized Lyrics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .player {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            width: 80vw;
+            max-width: 720px;
+            height: 45vw;
+            max-height: 405px;
+            box-sizing: border-box;
+        }
+        .left {
+            width: 40%;
+            text-align: center;
+            margin-right: 20px;
+        }
+        .right {
+            width: 60%;
+            overflow: hidden;
+        }
+        .song-list {
+            list-style: none;
+            padding: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .song-list li {
+            padding: 5px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+        .song-list li:hover {
+            background-color: #f0f0f0;
+        }
+        img {
+            width: 100%;
+            border-radius: 10px;
+            display: none;
+        }
+        .lyrics {
+            text-align: left;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            line-height: 1.4em;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .highlight {
+            background-color: #d1e7ff;
+        }
+        h2 {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="player">
+    <div class="left">
+        <img id="songImage" alt="Song Image">
+        <h2 id="songName">Select a song</h2>
+    </div>
+    <div class="right">
+        <div class="lyrics" id="lyricsContainer">Lyrics will appear here...</div>
+        <ul class="song-list" id="songList"></ul>
+        <audio id="audioPlayer" controls style="width: 100%;">
+            Your browser does not support the audio element.
+        </audio>
+        <input type="file" id="folderInput" webkitdirectory style="margin-top: 10px;">
+    </div>
+</div>
+
+<script>
+    const audioPlayer = document.getElementById('audioPlayer');
+    const folderInput = document.getElementById('folderInput');
+    const songList = document.getElementById('songList');
+    const songNameDisplay = document.getElementById('songName');
+    const songImage = document.getElementById('songImage');
+    const lyricsContainer = document.getElementById('lyricsContainer');
+
+    folderInput.addEventListener('change', function(event) {
+        const files = event.target.files;
+        const songs = Array.from(files).filter(file => file.type.startsWith('audio/'));
+
+        songList.innerHTML = '';
+
+        songs.forEach(song => {
+            const li = document.createElement('li');
+            li.textContent = song.name.split('.').slice(0, -1).join('.');
+            li.addEventListener('click', () => {
+                const songURL = URL.createObjectURL(song);
+                audioPlayer.src = songURL;
+                audioPlayer.play();
+
+                const baseName = song.name.split('.').slice(0, -1).join('.');
+                songNameDisplay.textContent = baseName;
+
+                // Load image and lyrics
+                loadImageAndLyrics(files, baseName);
+            });
+            songList.appendChild(li);
+        });
+    });
+
+    function loadImageAndLyrics(files, baseName) {
+        const imageFile = Array.from(files).find(file => file.name === `${baseName}.jpg`);
+        const lrcFile = Array.from(files).find(file => file.name === `${baseName}.lrc`);
+
+        if (imageFile) {
+            const imageURL = URL.createObjectURL(imageFile);
+            songImage.src = imageURL;
+            songImage.style.display = 'block';
+        } else {
+            songImage.style.display = 'none';
+        }
+
+        if (lrcFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lyrics = parseLRC(e.target.result);
+                displayLyrics(lyrics);
+            };
+            reader.readAsText(lrcFile);
+        } else {
+            lyricsContainer.textContent = "Lyrics not found.";
+        }
+    }
+
+    function parseLRC(lrcText) {
+        const lines = lrcText.split('\n');
+        const lyrics = lines.map(line => {
+            const match = line.match(/\[(\d+):(\d+\.\d+)\](.+)/);
+            if (match) {
+                const minutes = parseInt(match[1], 10);
+                const seconds = parseFloat(match[2]);
+                const time = minutes * 60 + seconds;
+                const text = match[3];
+                return { time, text };
+            }
+        }).filter(Boolean);
+        return lyrics;
+    }
+
+    function displayLyrics(lyrics) {
+        lyricsContainer.innerHTML = '';
+        lyrics.forEach(({ time, text }) => {
+            const p = document.createElement('p');
+            p.setAttribute('data-time', time);
+            p.textContent = text;
+            lyricsContainer.appendChild(p);
+        });
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            const currentTime = audioPlayer.currentTime;
+            const lines = lyricsContainer.querySelectorAll('p');
+            lines.forEach(line => {
+                const lineTime = parseFloat(line.getAttribute('data-time'));
+                if (currentTime >= lineTime) {
+                    lines.forEach(l => l.classList.remove('highlight'));
+                    line.classList.add('highlight');
+                    const containerHeight = lyricsContainer.clientHeight;
+                    const lineHeight = line.offsetHeight;
+                    const lineOffset = line.offsetTop;
+                    const scrollPosition = lineOffset - containerHeight / 2 + lineHeight / 2;
+                    lyricsContainer.scrollTo({
+                        top: scrollPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    }
+</script>
+
+</body>
+</html>
