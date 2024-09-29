@@ -11,7 +11,7 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-image: url('assets/wallpaper.jpg');
+            background-image: url('https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/wallpaper.jpg');
             background-size: cover;
             background-position: center;
             margin: 0;
@@ -195,6 +195,7 @@
         .rotate {
             animation: rotation 20s infinite linear;
             animation-play-state: paused;
+            transition: all 0.5s ease;
         }
         @keyframes rotation {
             from {
@@ -217,6 +218,7 @@
             padding: 0.25rem;
             margin-top: 15px;
             font-size: 14px;
+            transition: all .35s ease-in-out;
         }
 
         .radio-inputs .radio {
@@ -237,12 +239,13 @@
             border: none;
             padding: 15px;
             color: rgb(255, 255, 255);
-            transition: all .15s ease-in-out;
+            transition: all .35s ease-in-out;
         }
 
         .radio-inputs .radio input:checked + .name {
             background-color: #3b3b3b;
             font-weight: 600;
+            transition: all .35s ease-in-out;
         }
         
     </style>
@@ -251,7 +254,7 @@
 <div class="player">
     <div class="left">
         <div class="rotate" id="rotationImage">
-            <img id="songImage" src="assets/defapic.png" alt="Song Image">
+            <img id="songImage" src="https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png" alt="Song Image">
         </div>
         <h2 id="songName">Select a song</h2>
         <div class="controls">
@@ -377,7 +380,7 @@
                 const imageURL = URL.createObjectURL(imageFiles[baseName]);
                 songImage.src = imageURL;
             } else {
-                songImage.src = "assets/defapic.png";
+                songImage.src = "https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png";
             }
 
             if (lyricsFiles[baseName]) {
