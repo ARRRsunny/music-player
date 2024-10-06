@@ -2,8 +2,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import time
 import urllib.request as ul
 
-HOST = "192.168.0.153"
-PORT = 1234
+HOST = "1.1.1.1"  #your ip
+PORT = 1234   # any port
 
 class NeuralHTTP(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -27,7 +27,6 @@ class NeuralHTTP(BaseHTTPRequestHandler):
 
 server = HTTPServer((HOST, PORT), NeuralHTTP)
 print("Server started")
-print(HOST,":",PORT)
 server.serve_forever()
 server.server_close()
 
