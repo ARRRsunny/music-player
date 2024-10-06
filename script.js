@@ -19,8 +19,6 @@ const playerAPI = (() => {
     const themeset = document.getElementById('themeset');
     const radiobar = document.getElementById('radiobar');
     const radioNames = document.querySelectorAll('.radio-inputs .name');
-    const fileInputBefore = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
-    const songListItems = document.querySelectorAll('.song-list li');
     const info = document.getElementById('info');
     const NextSongBut = document.getElementById('Next');
     const PrevSongBut = document.getElementById('Prev');
@@ -32,6 +30,7 @@ const playerAPI = (() => {
     let imageFiles = {};
     let lyricsFiles = {};
     let theme = 'dark';
+    let lyricsData = [];
 
     folderInput.addEventListener('change', handleFolderChange);
     playPauseButton.addEventListener('click', togglePlayPause);
@@ -42,8 +41,8 @@ const playerAPI = (() => {
     Gitlinkopen.addEventListener('click', openGitlink);
     modeInputs.forEach(input => input.addEventListener('change', changePlaybackMode));
     themeButton.addEventListener('click', toggleTheme);
-    NextSongBut.addEventListener('click',NextSong);
-    PrevSongBut.addEventListener('click',PreviousSong);
+    NextSongBut.addEventListener('click', NextSong);
+    PrevSongBut.addEventListener('click', PreviousSong);
     modeInputs.forEach(input => {
         input.addEventListener('change', () => updateRadioStyles(
             theme === 'light' ? '#c4c4c4' : '#282828',
@@ -51,8 +50,7 @@ const playerAPI = (() => {
             theme === 'light' ? '#000' : '#fff'
         ));
     });
-
-
+    
     function updateSongListHover(hoverColor) {
         const songListItems = document.querySelectorAll('.song-list li');
         songListItems.forEach(item => {
@@ -81,10 +79,9 @@ const playerAPI = (() => {
             songList.style.backgroundColor = '#c4c4c4';
             folderInput.style.backgroundColor = '#c4c4c4';
             folderInput.style.color = '#000';
-            
+
             updateRadioStyles('#c4c4c4', '#b3b3b3', '#000');
-            updateFileInputStyle('#b3b3b3', '#739fda');
-            updateSongListHover('#b3b3b3'); 
+            updateSongListHover('#b3b3b3');
         } else {
             theme = 'dark';
             themeButton.textContent = '⚪️';
@@ -102,12 +99,11 @@ const playerAPI = (() => {
             folderInput.style.color = '#fff';
 
             updateRadioStyles('#282828', '#383838', '#fff');
-            updateFileInputStyle('#383838', '#739fda');
-            updateSongListHover('#333'); // Update hover color for dark theme
+            updateSongListHover('#333');
         }
     }
+
     function updateRadioStyles(otherColor, selectedColor, textColor) {
-        
         radioNames.forEach(name => {
             const input = name.previousElementSibling;
             if (input.checked) {
@@ -118,20 +114,6 @@ const playerAPI = (() => {
             name.style.color = textColor;
         });
     }
-
-    function updateFileInputStyle(bgColor, hoverColor) {
-        
-        for (let i = 0; i < fileInputBefore.length; i++) {
-            if (fileInputBefore[i].selectorText === "input[type=\"file\"]::before") {
-                fileInputBefore[i].style.backgroundColor = bgColor;
-            }
-            if (fileInputBefore[i].selectorText === "input[type=\"file\"]:hover::before") {
-                fileInputBefore[i].style.backgroundColor = hoverColor;
-            }
-        }
-    }
-
-
 
     function handleFolderChange(event) {
         const files = Array.from(event.target.files);
@@ -163,11 +145,11 @@ const playerAPI = (() => {
 
         folderInput.style.display = 'none';
     }
-    
+
     function openGitlink() {
         window.open("https://github.com/ARRRsunny/music-player");
     }
-    
+
     function playSong(index) {
         currentSongIndex = index;
         const song = songFiles[index];
@@ -189,72 +171,51 @@ const playerAPI = (() => {
             const imageURL = URL.createObjectURL(imageFiles[baseName]);
             songImage.src = imageURL;
         } else {
-            songImage.src = "https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png";
+            songImage.src = 'https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png';
         }
-
         if (lyricsFiles[baseName]) {
             const reader = new FileReader();
-            reader.onload = (e) => displayLyrics(parseLRC(e.target.result));
+            reader.onload = function (event) {
+                parseLyrics(event.target.result);
+            };
             reader.readAsText(lyricsFiles[baseName]);
         } else {
-            lyricsContainer.textContent = "No lyrics found.";
+            lyricsContainer.textContent = 'Lyrics will appear here...';
+            lyricsData = [];
         }
     }
 
-    function parseLRC(lrcText) {
-        const lines = lrcText.split('\n');
-        return lines.map(line => {
-            const match = line.match(/\[(\d+):(\d+\.\d+)\](.+)/);
+    function parseLyrics(lrcText) {
+        lyricsData = lrcText.split('\n').map(line => {
+            const match = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
             if (match) {
                 const minutes = parseInt(match[1], 10);
                 const seconds = parseFloat(match[2]);
+                const text = match[3].trim();
                 const time = minutes * 60 + seconds;
-                const text = match[3];
                 return { time, text };
             }
         }).filter(Boolean);
+    
+        lyricsContainer.innerHTML = lyricsData.map(lyric => `<p>${lyric.text}</p>`).join('');
+    
     }
 
-    function displayLyrics(lyrics) {
-        if (lyrics.length === 0) {
-            lyricsContainer.textContent = "No lyrics found.";
-            return;
+    function updateLyricsDisplay(currentTime) {
+        const currentLyricIndex = lyricsData.findIndex((lyric, index) => {
+            const nextLyric = lyricsData[index + 1];
+            return currentTime >= lyric.time && (!nextLyric || currentTime < nextLyric.time);
+        });
+    
+        if (currentLyricIndex !== -1) {
+            const lyricElements = lyricsContainer.getElementsByTagName('p');
+            Array.from(lyricElements).forEach((element, index) => {
+                element.classList.toggle('highlight', index === currentLyricIndex);
+            });
+    
+            // Scroll to the current lyric
+            lyricElements[currentLyricIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-
-        lyricsContainer.innerHTML = '';
-        lyrics.forEach(({ time, text }) => {
-            const p = document.createElement('p');
-            p.setAttribute('data-time', time);
-            p.textContent = text;
-            lyricsContainer.appendChild(p);
-        });
-
-        audioPlayer.addEventListener('timeupdate', () => syncLyrics(lyrics));
-    }
-
-    function syncLyrics(lyrics) {
-        const currentTime = audioPlayer.currentTime;
-        const lines = lyricsContainer.querySelectorAll('p');
-        lines.forEach((line, index) => {
-            const lineTime = parseFloat(line.getAttribute('data-time'));
-            if (currentTime >= lineTime) {
-                lines.forEach(l => l.classList.remove('highlight'));
-                line.classList.add('highlight');
-
-                const lineHeight = line.offsetHeight;
-                const containerHeight = lyricsContainer.clientHeight;
-                const lineOffset = line.offsetTop;
-                const nextLineTime = index < lines.length - 1 ? parseFloat(lines[index + 1].getAttribute('data-time')) : Infinity;
-                
-                if (currentTime < nextLineTime) {
-                    const scrollPosition = lineOffset - containerHeight / 2 + lineHeight / 2 - 200;
-                    lyricsContainer.scrollTo({
-                        top: scrollPosition,
-                        behavior: 'auto'
-                    });
-                }
-            }
-        });
     }
 
     function togglePlayPause() {
@@ -273,57 +234,57 @@ const playerAPI = (() => {
         playPauseButton.textContent = isPlaying ? '⏸️' : '▶️';
     }
 
-    function updateProgress() {
-        const progressPercent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-        progress.style.width = `${progressPercent}%`;
+    function seek(event) {
+        const width = progressBar.clientWidth;
+        const clickX = event.offsetX;
+        const duration = audioPlayer.duration;
+
+        audioPlayer.currentTime = (clickX / width) * duration;
     }
 
-    function seek(e) {
-        const width = progressBar.clientWidth;
-        const clickX = e.offsetX;
-        const duration = audioPlayer.duration;
-        audioPlayer.currentTime = (clickX / width) * duration;
+    function updateProgress() {
+        const { currentTime, duration } = audioPlayer;
+        const progressPercent = (currentTime / duration) * 100;
+        progress.style.width = `${progressPercent}%`;
+
+        updateLyricsDisplay(currentTime);
     }
 
     function changeVolume() {
         audioPlayer.volume = volumeSlider.value;
     }
 
-    function getBaseName(filename) {
-        return filename.split('.').slice(0, -1).join('.');
-    }
-
     function handleSongEnd() {
-        switch (playbackMode) {
-            case 'loop':
-                playSong(currentSongIndex);
-                break;
-            case 'random':
-                playSong(Math.floor(Math.random() * songFiles.length));
-                break;
-            case 'once':
-                isPlaying = false;
-                updatePlayPauseButton();
-                rotationImage.style.animationPlayState = 'paused';
-                break;
+        if (playbackMode === 'loop') {
+            playSong(currentSongIndex);
+        } else if (playbackMode === 'random') {
+            const randomIndex = Math.floor(Math.random() * songFiles.length);
+            playSong(randomIndex);
+        } else if (playbackMode === 'once') {
+            audioPlayer.pause();
+            isPlaying = false;
+            updatePlayPauseButton();
+            rotationImage.style.animationPlayState = 'paused';
         }
     }
-    
+
+    function changePlaybackMode(event) {
+        playbackMode = event.target.value;
+    }
+
     function NextSong() {
-        playSong(currentSongIndex+1);
+        currentSongIndex = (currentSongIndex + 1) % songFiles.length;
+        playSong(currentSongIndex);
     }
-    
+
     function PreviousSong() {
-        playSong(currentSongIndex-1);
+        currentSongIndex = (currentSongIndex - 1 + songFiles.length) % songFiles.length;
+        playSong(currentSongIndex);
     }
 
-
-    function changePlaybackMode() {
-        playbackMode = document.querySelector('input[name="mode"]:checked').value;
+    function getBaseName(fileName) {
+        return fileName.substring(0, fileName.lastIndexOf('.'));
     }
 
-    return {
-        playSong,
-        loadImageAndLyrics
-    };
+    return {};
 })();

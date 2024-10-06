@@ -64,7 +64,7 @@ body {
 }
 img {
     width: 350px;
-    height: 350px; 
+    height: 350px;
     border-radius: 50%;
     background-color: #739fda;
     object-fit: cover;
@@ -176,7 +176,7 @@ input[type="file"]::-webkit-file-upload-button {
 }
 input[type="file"]::before {
     content: 'Choose Folder';
-    background-color: #383838;
+    background-color: #739fda;
     display: inline-block;
     padding: 10px 10px;
     border-radius: 20px;
@@ -209,6 +209,7 @@ button {
         transform: rotate(360deg);
     }
 }
+/* From Uiverse.io by Yaya12085 */
 .radio-inputs {
     position: relative;
     display: flex;
@@ -232,7 +233,7 @@ button {
     cursor: pointer;
     align-items: center;
     justify-content: center;
-    border-radius: 18px;    
+    border-radius: 18px;
     border: none;
     padding: 15px;
     transition: all .35s ease-in-out;
