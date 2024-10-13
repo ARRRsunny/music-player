@@ -353,8 +353,7 @@
 <script>
     const playerAPI = (() => {
 
-        let ADDR = "";
-
+        
 
         const audioPlayer = new Audio();
         const songList = document.getElementById('songList');
@@ -389,7 +388,12 @@
         let theme = 'dark';
         let lyricsData = [];
         
-
+        let currentUrl = window.location.href;
+        result = currentUrl.replace(/(^\w+:|^)\/\//, '');
+        
+        let ADDR = result;
+        console.log(ADDR);
+        addrinput.value = ADDR;
         
         playPauseButton.addEventListener('click', togglePlayPause);
         audioPlayer.addEventListener('timeupdate', updateProgress);
@@ -416,6 +420,7 @@
             if (validIpAddress(addrinput.value)){
                 ADDR = addrinput.value;
                 console.log(ADDR)
+
                 inputGroup.style.display = 'none';
 
                 getsonglist();
