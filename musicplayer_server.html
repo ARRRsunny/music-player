@@ -390,7 +390,9 @@
         
         let currentUrl = window.location.href;
         result = currentUrl.replace(/(^\w+:|^)\/\//, '');
-        
+        if(result.slice(-1)=="/"){
+            let result = result.slice(0,-1);
+        }
         let ADDR = result;
         console.log(ADDR);
         addrinput.value = ADDR;
