@@ -388,16 +388,9 @@
         let theme = 'dark';
         let lyricsData = [];
         
-        let currentUrl = window.location.href;
-        let result = currentUrl.replace(/(^\w+:|^)\/\//, '');
-
-        if (result.slice(-1) === "/") {
-            result = result.slice(0, -1);
-        }
-
-        let ADDR = result;
-        console.log(ADDR);
+        let ADDR = window.location.host;
         addrinput.value = ADDR;
+        console.log(ADDR);
         
         playPauseButton.addEventListener('click', togglePlayPause);
         audioPlayer.addEventListener('timeupdate', updateProgress);
