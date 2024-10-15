@@ -6,6 +6,7 @@
     <title>Music Player</title>
     <link rel="shortcut icon" href="https://raw.githubusercontent.com/ARRRsunny/music-player/refs/heads/main/assets/favicon.ico" type="image/x-icon">
     <style>
+        /* Basic styling for body */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
@@ -21,6 +22,7 @@
             overflow: hidden;
             transition: all .35s ease-in-out;
         }
+        /* Main player container */
         .player {
             background-color: rgba(24, 24, 24, 0.9);
             box-shadow: 0 18px 40px rgba(0, 0, 0, 0.603);
@@ -34,6 +36,7 @@
             box-sizing: border-box;
             transition: all .35s ease-in-out;
         }
+        /* Layout for left and right sections */
         .left, .right {
             box-sizing: border-box;
             padding: 10px;
@@ -49,6 +52,7 @@
             width: 93%;
             flex-direction: column;
         }
+        /* Styling for song name and list */
         .songName {
             margin: 10px;
         }
@@ -73,6 +77,7 @@
         .song-list li:hover {
             background-color: #333;
         }
+        /* Image styling */
         img {
             width: 350px;
             height: 350px;
@@ -80,6 +85,7 @@
             background-color: #739fda;
             object-fit: cover;
         }
+        /* Lyrics container */
         .lyrics {
             text-align: left;
             height: 200px;
@@ -97,18 +103,21 @@
             padding: 5px;
             transition: color 0.3s;
         }
+        /* Highlight effect for lyrics */
         .highlight {
             background-color: #739fda;
             color: #fff;
             border-radius: 5px;
             padding: 4px;
         }
+        /* Heading styling */
         h2 {
             font-size: 1.8em;
             margin: 10px 0;
             overflow: hidden;
             height: 40px;
         }
+        /* Controls styling */
         .controls {
             display: flex;
             align-items: center;
@@ -119,6 +128,7 @@
             margin-top: 10px;
             transition: all .35s ease-in-out;
         }
+        /* Progress bar */
         .progress-bar {
             flex-grow: 1;
             height: 10px;
@@ -135,6 +145,7 @@
             border-radius: 5px;
             width: 0;
         }
+        /* Volume control styling */
         .volume-control {
             display: flex;
             align-items: center;
@@ -145,6 +156,7 @@
             margin-top: 15px;
             transition: all .35s ease-in-out;
         }
+        /* Volume slider */
         .volume-slider {
             flex-grow: 1;
             height: 10px;
@@ -155,6 +167,7 @@
             position: relative;
             color: #739fda;
         }
+        /* Info display */
         .info {
             margin-top: 15px;
             height: 0;
@@ -174,6 +187,7 @@
             width: 160px;
             opacity: 1;
         }
+        /* Button styling */
         button {
             background: none;
             border: none;
@@ -181,6 +195,7 @@
             cursor: pointer;
             font-size: 1.5em;
         }
+        /* Animation for rotating image */
         .rotate {
             animation: rotation 20s infinite linear;
             animation-play-state: paused;
@@ -194,6 +209,7 @@
                 transform: rotate(360deg);
             }
         }
+        /* Radio input styles */
         .radio-inputs {
             position: relative;
             display: flex;
@@ -227,6 +243,7 @@
             font-weight: 600;
             transition: all .35s ease-in-out;
         }
+        /* Theme switcher */
         .themeset {
             background-color: #282828;
             border-radius: 20px;
@@ -237,7 +254,7 @@
             transition: all .35s ease-in-out;
             font-size: 13px;
         }
-        .setting{
+        .setting {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -245,7 +262,7 @@
             padding: 15px;
             transition: all .35s ease-in-out;
         }
-
+        /* Address input group */
         .input-group {
             margin-top: 20px;
             display: none;
@@ -261,7 +278,6 @@
             color: #fff;
             transition: all .35s ease-in-out;
         }
-
         .label {
             display: block;
             margin-bottom: .3rem;
@@ -270,13 +286,13 @@
             color: #fff;
             transition: all .35s ease-in-out;
         }
-
+        /* Input hover effects */
         .input:hover, .input:focus, .input:hover .input {
             outline: none;
             border-color: #0a0a0a;
         }
-
-        .addrButton{    
+        /* Address button styling */
+        .addrButton {    
             margin-top: 28px;
             margin-left: 10px;
             max-width: 190px;
@@ -289,11 +305,11 @@
             color: #fff;
             transition: all .35s ease-in-out;
         }
-        .addrButton:hover{
+        .addrButton:hover {
             background-color: #3b3b3b;
             transition: all .35s ease-in-out;
         }
-
+        /* Responsive design for smaller screens */
         @media (max-width: 768px) {
             .player {
                 flex-direction: column;
@@ -326,24 +342,28 @@
     </style>
 </head>
 <body>
-<div class="player" id = "player">
+<div class="player" id="player">
     <div class="left">
+        <!-- Rotating image for song cover -->
         <div class="rotate" id="rotationImage">
             <img id="songImage" src="https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png" alt="Song Image">
         </div>
         <h2 id="songName">Select a song</h2>
-        <div class="controls" id = "control">
+        <!-- Playback controls -->
+        <div class="controls" id="control">
             <button id="playPauseButton">▶️</button>
             <div class="progress-bar" id="progressBar">
                 <div class="progress" id="progress"></div>
             </div>
         </div>
+        <!-- Volume control -->
         <div class="volume-control" id="volcontrol">
             🔊
             <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="1">
             <button id="Prev">⏪</button>
             <button id="Next">⏩</button>
         </div>
+        <!-- Playback mode selection -->
         <div class="radio-inputs" id="radiobar">
             <label class="radio">
               <input type="radio" name="mode" value="loop" checked>
@@ -358,6 +378,7 @@
               <span class="name">Once</span>
             </label>
         </div>
+        <!-- Theme switcher -->
         <div class="setting">
             <div class="themeset" id="themeset">
                 <button id="themeswitch">⚪️</button>
@@ -365,17 +386,21 @@
         </div>
     </div>
     <div class="right">
+        <!-- Lyrics display -->
         <div class="lyrics" id="lyricsContainer">Lyrics will appear here...</div>
-        <div class="input-group" id ="input-group">
+        <!-- Address input for server connection -->
+        <div class="input-group" id="input-group">
             <div>
-                <label class="label" id = "addrlabel">Address</label>
+                <label class="label" id="addrlabel">Address</label>
                 <input autocomplete="off" name="Address" id="Address" class="input">
             </div>
             <button class="addrButton" id="addrButton">send</button>
         </div>
+        <!-- Song list display -->
         <ul class="song-list" id="songList"></ul>
     </div>
 </div>
+<!-- Info and GitHub link -->
 <div class="info" id="info">  
     <button id="GithublinkBu">🐱</button>
     <h5 id="Auth">@ARRRsunny</h5>
@@ -420,13 +445,13 @@
         
         let ADDR = ""
         let AD_dummy = window.location.host
+
+        /*other address you want, uncommand it and add a address you want*/
         /*
-        AD_dummy = ""  other address you want
+        AD_dummy = ""  
         */
+
         setaddr(AD_dummy);
-        
-        
-        console.log(ADDR);
         
         playPauseButton.addEventListener('click', togglePlayPause);
         audioPlayer.addEventListener('timeupdate', updateProgress);
@@ -455,11 +480,11 @@
             if (validIpAddress(AD)){
                 console.log(AD)
                 ADDR = AD;
-                addrinput.value = ADDR;
                 inputGroup.style.display = 'none'
                 getsonglist();
             } else {
                 inputGroup.style.display = 'flex'
+                addrinput.value = AD;
                 console.error("wrong address")
             }
             
