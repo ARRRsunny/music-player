@@ -248,7 +248,7 @@
 
         .input-group {
             margin-top: 20px;
-            display: flex;
+            display: none;
         }
         .input {
             max-width: 190px;
@@ -292,6 +292,36 @@
         .addrButton:hover{
             background-color: #3b3b3b;
             transition: all .35s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .player {
+                flex-direction: column;
+                height: auto;
+                padding: 10px;
+            }
+            .left, .right {
+                flex: 1 1 100%;
+                padding: 5px;
+            }
+            img {
+                width: 250px;
+                height: 250px;
+            }
+            .lyrics {
+                height: 150px;
+            }
+            .controls, .volume-control, .radio-inputs {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 5px;
+            }
+            .progress-bar, .volume-slider {
+                margin: 5px 0;
+            }
+            button {
+                font-size: 1.2em;
+            }
         }
     </style>
 </head>
@@ -388,8 +418,14 @@
         let theme = 'dark';
         let lyricsData = [];
         
-        let ADDR = window.location.host;
-        addrinput.value = ADDR;
+        let ADDR = ""
+        let AD_dummy = window.location.host
+        /*
+        AD_dummy = ""  other address you want
+        */
+        setaddr(AD_dummy);
+        
+        
         console.log(ADDR);
         
         playPauseButton.addEventListener('click', togglePlayPause);
@@ -402,7 +438,7 @@
         NextSongBut.addEventListener('click', NextSong);
         PrevSongBut.addEventListener('click', PreviousSong);
         themeButton.addEventListener('click', toggleTheme);
-        addrButton.addEventListener('click',setaddr)
+        addrButton.addEventListener('click',refillADDR)
         modeInputs.forEach(input => {
             input.addEventListener('change', () => updateRadioStyles(
                 theme === 'light' ? '#c4c4c4' : '#282828',
@@ -411,17 +447,19 @@
             ));
         });
 
-
+        function refillADDR(){
+            setaddr(addrinput.value)
+        }
         
-        function setaddr(){
-            if (validIpAddress(addrinput.value)){
-                ADDR = addrinput.value;
-                console.log(ADDR)
-
-                inputGroup.style.display = 'none';
-
+        function setaddr(AD){
+            if (validIpAddress(AD)){
+                console.log(AD)
+                ADDR = AD;
+                addrinput.value = ADDR;
+                inputGroup.style.display = 'none'
                 getsonglist();
             } else {
+                inputGroup.style.display = 'flex'
                 console.error("wrong address")
             }
             
