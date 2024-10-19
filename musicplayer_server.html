@@ -13,7 +13,7 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-image: url('https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/wallpaper.jpg');
+            background-image: url('https://picsum.photos/1920/1080');
             background-size: cover;
             background-position: center;
             margin: 0;
@@ -21,6 +21,8 @@
             flex-direction: column;
             overflow: hidden;
             transition: all .35s ease-in-out;
+            overflow-y: auto;
+            overflow-x: auto;
         }
         /* Main player container */
         .player {
@@ -32,7 +34,6 @@
             flex-wrap: wrap;
             width: 90vw;
             max-width: 1080px;
-            height: 81vh;
             box-sizing: border-box;
             transition: all .35s ease-in-out;
         }
@@ -49,7 +50,7 @@
             flex: 1 1 60%;
             overflow: hidden;
             display: flex;
-            width: 93%;
+
             flex-direction: column;
         }
         /* Styling for song name and list */
@@ -268,7 +269,7 @@
             display: none;
         }
         .input {
-            max-width: 190px;
+
             height: 44px;
             background-color: #282828;
             border-radius: 20px;
@@ -310,35 +311,8 @@
             transition: all .35s ease-in-out;
         }
         /* Responsive design for smaller screens */
-        @media (max-width: 768px) {
-            .player {
-                flex-direction: column;
-                height: auto;
-                padding: 10px;
-            }
-            .left, .right {
-                flex: 1 1 100%;
-                padding: 5px;
-            }
-            img {
-                width: 250px;
-                height: 250px;
-            }
-            .lyrics {
-                height: 150px;
-            }
-            .controls, .volume-control, .radio-inputs {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 5px;
-            }
-            .progress-bar, .volume-slider {
-                margin: 5px 0;
-            }
-            button {
-                font-size: 1.2em;
-            }
-        }
+
+        
     </style>
 </head>
 <body>
