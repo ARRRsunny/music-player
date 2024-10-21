@@ -23,6 +23,7 @@
             transition: all .35s ease-in-out;
             overflow-y: auto;
             overflow-x: auto;
+            min-width: 1072px;
         }
         /* Main player container */
         .player {
@@ -61,6 +62,7 @@
             list-style: none;
             padding: 0;
             max-height: 200px;
+
             overflow-y: auto;
             margin: 10px 0;
             background-color: #282828;
@@ -68,6 +70,7 @@
             transition: all .35s ease-in-out;
             color: white; 
             display: block; 
+            
         }
         .song-list li {
             padding: 10px;
@@ -97,7 +100,9 @@
             background-color: #282828;
             border-radius: 20px;
             flex-grow: 1;
-            transition: all .35s ease-in-out;
+            transition: all .35s ease-in-out;   
+            display:block;
+            margin-bottom: 10px;
         }
         .lyrics p {
             margin: 0;
@@ -311,8 +316,17 @@
             transition: all .35s ease-in-out;
         }
         /* Responsive design for smaller screens */
+        @media (max-width: 1072px) {
+            .lyrics {
+            display: none;
+        }
+        }
 
-        
+        .progress-time {
+            max-height: 10px;
+            margin-top: -50px;
+            min-width: 30px;
+        }
     </style>
 </head>
 <body>
@@ -328,6 +342,9 @@
             <button id="playPauseButton">▶️</button>
             <div class="progress-bar" id="progressBar">
                 <div class="progress" id="progress"></div>
+            </div>
+            <div class="progress-time" id="progress-Time">
+                <h5 id="time">0:00</h4>
             </div>
         </div>
         <!-- Volume control -->
@@ -382,114 +399,104 @@
 <script>
     const playerAPI = (() => {
 
-        
-
         const audioPlayer = new Audio();
-        const songList = document.getElementById('songList');
-        const songNameDisplay = document.getElementById('songName');
-        const songImage = document.getElementById('songImage');
-        const lyricsContainer = document.getElementById('lyricsContainer');
-        const playPauseButton = document.getElementById('playPauseButton');
-        const progressBar = document.getElementById('progressBar');
-        const progress = document.getElementById('progress');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const Gitlinkopen = document.getElementById('GithublinkBu');
-        const rotationImage = document.getElementById('rotationImage');
-        const modeInputs = document.querySelectorAll('input[name="mode"]');
-        const themeButton = document.getElementById('themeswitch');
-        const player = document.getElementById('player');
-        const control = document.getElementById('control');
-        const volcontrol = document.getElementById('volcontrol');
-        const radiobar = document.getElementById('radiobar');
-        const info = document.getElementById('info');
-        const NextSongBut = document.getElementById('Next');
-        const PrevSongBut = document.getElementById('Prev');
-        const themeset = document.getElementById('themeset');
-        const li = document.getElementsByClassName("song-list");
-        const addrinput = document.getElementById("Address");
-        const addrButton = document.getElementById("addrButton");
-        const inputGroup = document.getElementById("input-group");
-        const addrlabel = document.getElementById("addrlabel");
+        const elements = {
+            songList: document.getElementById('songList'),
+            songNameDisplay: document.getElementById('songName'),
+            songImage: document.getElementById('songImage'),
+            lyricsContainer: document.getElementById('lyricsContainer'),
+            playPauseButton: document.getElementById('playPauseButton'),
+            progressBar: document.getElementById('progressBar'),
+            progress: document.getElementById('progress'),
+            volumeSlider: document.getElementById('volumeSlider'),
+            Gitlinkopen: document.getElementById('GithublinkBu'),
+            rotationImage: document.getElementById('rotationImage'),
+            modeInputs: document.querySelectorAll('input[name="mode"]'),
+            themeButton: document.getElementById('themeswitch'),
+            player: document.getElementById('player'),
+            control: document.getElementById('control'),
+            volcontrol: document.getElementById('volcontrol'),
+            radiobar: document.getElementById('radiobar'),
+            info: document.getElementById('info'),
+            NextSongBut: document.getElementById('Next'),
+            PrevSongBut: document.getElementById('Prev'),
+            themeset: document.getElementById('themeset'),
+            addrinput: document.getElementById('Address'),
+            addrButton: document.getElementById('addrButton'),
+            inputGroup: document.getElementById('input-group'),
+            addrlabel: document.getElementById('addrlabel')
+        };
+
         let isPlaying = false;
         let playbackMode = 'loop';
         let currentSongIndex = 0;
         let songs = [];
         let theme = 'dark';
         let lyricsData = [];
-        
-        let ADDR = ""
-        let AD_dummy = window.location.host
-
-        /*other address you want, uncommand it and add a address you want*/
-        /*
-        AD_dummy = ""  
-        */
+        let ADDR = "";
+        let AD_dummy = window.location.host;
 
         setaddr(AD_dummy);
-        
-        playPauseButton.addEventListener('click', togglePlayPause);
-        audioPlayer.addEventListener('timeupdate', updateProgress);
-        audioPlayer.addEventListener('ended', handleSongEnd);
-        Gitlinkopen.addEventListener('click', openGitlink);
-        progressBar.addEventListener('click', seek);
-        volumeSlider.addEventListener('input', changeVolume);
-        modeInputs.forEach(input => input.addEventListener('change', changePlaybackMode));
-        NextSongBut.addEventListener('click', NextSong);
-        PrevSongBut.addEventListener('click', PreviousSong);
-        themeButton.addEventListener('click', toggleTheme);
-        addrButton.addEventListener('click',refillADDR)
-        modeInputs.forEach(input => {
-            input.addEventListener('change', () => updateRadioStyles(
-                theme === 'light' ? '#c4c4c4' : '#282828',
-                theme === 'light' ? '#b3b3b3' : '#383838',
-                theme === 'light' ? '#000' : '#fff'
-            ));
+
+        elements.playPauseButton.addEventListener('click', togglePlayPause);
+        elements.progressBar.addEventListener('click', seek);
+        elements.volumeSlider.addEventListener('input', changeVolume);
+        elements.modeInputs.forEach(input => input.addEventListener('change', changePlaybackMode));
+        elements.NextSongBut.addEventListener('click', NextSong);
+        elements.PrevSongBut.addEventListener('click', PreviousSong);
+        elements.themeButton.addEventListener('click', toggleTheme);
+        elements.addrButton.addEventListener('click', refillADDR);
+        elements.Gitlinkopen.addEventListener('click', openGitlink);
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            updateProgress();
+            updateLyricsDisplay(audioPlayer.currentTime);
         });
 
-        function refillADDR(){
-            setaddr(addrinput.value)
+        audioPlayer.addEventListener('ended', handleSongEnd);
+
+        function refillADDR() {
+            setaddr(elements.addrinput.value);
         }
-        
-        function setaddr(AD){
-            if (validIpAddress(AD)){
-                console.log(AD)
+
+        function setaddr(AD) {
+            if (validIpAddress(AD)) {
                 ADDR = AD;
-                inputGroup.style.display = 'none'
+                elements.inputGroup.style.display = 'none';
                 getsonglist();
             } else {
-                inputGroup.style.display = 'flex'
-                addrinput.value = AD;
-                console.error("wrong address")
+                elements.inputGroup.style.display = 'flex';
+                elements.addrinput.value = AD;
+                console.error("Invalid address");
             }
-            
-        }   
-        
+        }
+
         function validIpAddress(ip) {
             const ipv4PortPattern = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}:(\d{1,5})$/;
-            if (!ipv4PortPattern.test(ip)) {
-                return false;
-            }
             const port = parseInt(ip.split(':')[1], 10);
-            return port >= 0 && port <= 65535;
+            return ipv4PortPattern.test(ip) && port >= 0 && port <= 65535;
         }
-        function getsonglist(){
+
+        function getsonglist() {
             fetch(`http://${ADDR}/songs`)
                 .then(response => response.json())
                 .then(data => {
                     songs = Object.values(data);
                     updateSongList();
-                    })
+                })
                 .catch(error => console.error('Error fetching songs:', error));
         }
 
         function updateSongList() {
-            songList.innerHTML = '';
+            elements.songList.innerHTML = '';
             songs.forEach((song, index) => {
                 const li = document.createElement('li');
                 li.textContent = song;
                 li.addEventListener('click', () => playSong(index));
-                songList.appendChild(li);
+                elements.songList.appendChild(li);
             });
+            updateSongListHover(theme === 'light' ? '#b3b3b3' : '#383838');
+            updateSongListTextColor(theme === 'light' ? '#000' : '#fff');
         }
 
         function playSong(index) {
@@ -499,24 +506,22 @@
             audioPlayer.src = `http://${ADDR}/${index}/audio`;
             audioPlayer.play();
 
-            songNameDisplay.textContent = songName;
-            songImage.src = `http://${ADDR}/${index}/image` || 'https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png';
+            elements.songNameDisplay.textContent = songName;
+            elements.songImage.src = `http://${ADDR}/${index}/image` || 'https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png';
 
-            lyrics_i = httpGet(`http://${ADDR}/${index}/lyrics`)
-            parseLyrics(lyrics_i|| 'no lyrics');
-            rotationImage.style.animationPlayState = 'running';
+            const lyrics = httpGet(`http://${ADDR}/${index}/lyrics`);
+            parseLyrics(lyrics || 'no lyrics');
+            elements.rotationImage.style.animationPlayState = 'running';
             isPlaying = true;
             updatePlayPauseButton();
- 
-            }
-            
-        function httpGet(theUrl) {
-            let xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("GET", theUrl, false);
+        }
+
+        function httpGet(url) {
+            const xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", url, false);
             xmlHttp.send(null);
             return xmlHttp.responseText;
         }
-            
 
         function parseLyrics(lrcText) {
             lyricsData = lrcText.split('\n').map(line => {
@@ -530,10 +535,8 @@
                 }
             }).filter(Boolean);
 
-            lyricsContainer.innerHTML = lyricsData.map(lyric => `<p>${lyric.text}</p>`).join('');
+            elements.lyricsContainer.innerHTML = lyricsData.map(lyric => `<p>${lyric.text}</p>`).join('');
         }
-
-
 
         function updateLyricsDisplay(currentTime) {
             const currentLyricIndex = lyricsData.findIndex((lyric, index) => {
@@ -542,7 +545,7 @@
             });
 
             if (currentLyricIndex !== -1) {
-                const lyricElements = lyricsContainer.getElementsByTagName('p');
+                const lyricElements = elements.lyricsContainer.getElementsByTagName('p');
                 Array.from(lyricElements).forEach((element, index) => {
                     element.classList.toggle('highlight', index === currentLyricIndex);
                 });
@@ -551,29 +554,24 @@
             }
         }
 
-        audioPlayer.addEventListener('timeupdate', () => {
-            updateProgress();
-            updateLyricsDisplay(audioPlayer.currentTime);
-        });
-
         function togglePlayPause() {
             if (isPlaying) {
                 audioPlayer.pause();
-                rotationImage.style.animationPlayState = 'paused';
+                elements.rotationImage.style.animationPlayState = 'paused';
             } else {
                 audioPlayer.play();
-                rotationImage.style.animationPlayState = 'running';
+                elements.rotationImage.style.animationPlayState = 'running';
             }
             isPlaying = !isPlaying;
             updatePlayPauseButton();
         }
 
         function updatePlayPauseButton() {
-            playPauseButton.textContent = isPlaying ? '⏸️' : '▶️';
+            elements.playPauseButton.textContent = isPlaying ? '⏸️' : '▶️';
         }
 
         function seek(event) {
-            const width = progressBar.clientWidth;
+            const width = elements.progressBar.clientWidth;
             const clickX = event.offsetX;
             const duration = audioPlayer.duration;
 
@@ -581,15 +579,19 @@
         }
 
         function updateProgress() {
-            const { currentTime, duration } = audioPlayer;
+            const currentTime = audioPlayer.currentTime;
+            const duration = audioPlayer.duration;
             const progressPercent = (currentTime / duration) * 100;
-            progress.style.width = `${progressPercent}%`;
+            elements.progress.style.width = `${progressPercent}%`;
 
-            updateLyricsDisplay(currentTime);
+            const minutes = Math.floor(currentTime / 60);
+            const seconds = Math.floor(currentTime % 60);
+            const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+            document.getElementById('time').textContent = `${minutes}:${formattedSeconds}`;
         }
 
         function changeVolume() {
-            audioPlayer.volume = volumeSlider.value;
+            audioPlayer.volume = elements.volumeSlider.value;
         }
 
         function handleSongEnd() {
@@ -602,8 +604,68 @@
                 audioPlayer.pause();
                 isPlaying = false;
                 updatePlayPauseButton();
-                rotationImage.style.animationPlayState = 'paused';
+                elements.rotationImage.style.animationPlayState = 'paused';
             }
+        }
+
+        function changePlaybackMode(event) {
+            playbackMode = event.target.value;
+            updateRadioStyles(
+                theme === 'light' ? '#c4c4c4' : '#282828',
+                theme === 'light' ? '#b3b3b3' : '#383838',
+                theme === 'light' ? '#000' : '#fff'
+            );
+            
+        }
+
+        function NextSong() {
+            currentSongIndex = (currentSongIndex + 1) % songs.length;
+            playSong(currentSongIndex);
+        }
+
+        function PreviousSong() {
+            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            playSong(currentSongIndex);
+        }
+
+        function toggleTheme() {
+            if (theme === 'dark') {
+                theme = 'light';
+                applyTheme('rgba(202, 202, 202, 0.8)', '#000', '#c4c4c4', '#b3b3b3');
+            } else {
+                theme = 'dark';
+                applyTheme('rgba(24, 24, 24, 0.9)', '#fff', '#282828', '#383838');
+            }
+        }
+
+        function applyTheme(bgColor, textColor, bgElementColor, hoverColor) {
+            document.body.style.backgroundColor = bgColor;
+            document.body.style.color = textColor;
+            elements.player.style.backgroundColor = bgColor;
+            elements.info.style.backgroundColor = bgColor;
+            elements.control.style.backgroundColor = bgElementColor;
+            elements.volcontrol.style.backgroundColor = bgElementColor;
+            elements.radiobar.style.backgroundColor = bgElementColor;
+            elements.lyricsContainer.style.backgroundColor = bgElementColor;
+            elements.songList.style.backgroundColor = bgElementColor;
+            elements.themeset.style.backgroundColor = bgElementColor;
+            elements.addrButton.style.backgroundColor = bgElementColor;
+            elements.addrButton.style.color = textColor;
+            elements.addrlabel.style.color = textColor;
+            elements.addrinput.style.backgroundColor = bgElementColor;
+            elements.addrinput.style.color = textColor;
+            updateRadioStyles(bgElementColor, hoverColor, textColor);
+            updateSongListHover(hoverColor);
+            updateSongListTextColor(textColor);
+            elements.themeButton.textContent = theme === 'light' ? '⚫️' : '⚪️';
+        }
+
+        function updateRadioStyles(otherColor, selectedColor, textColor) {
+            document.querySelectorAll('.radio-inputs .name').forEach(name => {
+                const input = name.previousElementSibling;
+                name.style.backgroundColor = input.checked ? selectedColor : otherColor;
+                name.style.color = textColor;
+            });
         }
 
         function updateSongListHover(hoverColor) {
@@ -625,83 +687,11 @@
             });
         }
 
-        function changePlaybackMode(event) {
-            playbackMode = event.target.value;
-        }
-
-        function NextSong() {
-            currentSongIndex = (currentSongIndex + 1) % songs.length;
-            playSong(currentSongIndex);
-        }
-
-        function PreviousSong() {
-            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
-            playSong(currentSongIndex);
-        }
-
-        function toggleTheme() {
-            if (theme === 'dark') {
-                theme = 'light';
-                themeButton.textContent = '⚫️';
-                document.body.style.backgroundColor = '#fff';
-                document.body.style.color = '#000';
-                player.style.backgroundColor = 'rgba(202, 202, 202, 0.8)';
-                info.style.backgroundColor = 'rgba(202, 202, 202, 0.8)';
-                control.style.backgroundColor = '#c4c4c4';
-                volcontrol.style.backgroundColor = '#c4c4c4';
-                radiobar.style.backgroundColor = '#c4c4c4';
-                lyricsContainer.style.backgroundColor = '#c4c4c4';
-                songList.style.backgroundColor = '#c4c4c4';
-                themeset.style.backgroundColor = '#c4c4c4';
-                addrButton.style.backgroundColor = '#c4c4c4';
-                addrButton.style.color = "#000";
-                addrlabel.style.color = "#000";
-                addrinput.style.backgroundColor = '#c4c4c4';
-                addrinput.style.color = "#000";
-                updateRadioStyles('#c4c4c4', '#b3b3b3', '#000');
-                updateSongListHover('#b3b3b3');
-                updateSongListTextColor('#000');
-            } else {
-                theme = 'dark';
-                themeButton.textContent = '⚪️';
-                document.body.style.backgroundColor = 'rgba(24, 24, 24, 0.9)';
-                document.body.style.color = '#fff';
-                player.style.backgroundColor = 'rgba(24, 24, 24, 0.9)';
-                info.style.backgroundColor = 'rgba(24, 24, 24, 0.9)';
-                control.style.backgroundColor = '#282828';
-                volcontrol.style.backgroundColor = '#282828';
-                radiobar.style.backgroundColor = '#282828';
-                lyricsContainer.style.backgroundColor = '#282828';
-                songList.style.backgroundColor = '#282828';
-                themeset.style.backgroundColor = '#282828';
-                addrButton.style.backgroundColor = '#282828';
-                addrButton.style.color = "#fff";
-                addrlabel.style.color = "#fff";
-                addrinput.style.backgroundColor = '#282828';
-                addrinput.style.color = "#fff";
-                updateRadioStyles('#282828', '#383838', '#fff');
-                updateSongListHover('#333');
-                updateSongListTextColor('#fff');
-            }
-        }
-
-        function updateRadioStyles(otherColor, selectedColor, textColor) {
-            document.querySelectorAll('.radio-inputs .name').forEach(name => {
-                const input = name.previousElementSibling;
-                if (input.checked) {
-                    name.style.backgroundColor = selectedColor;
-                } else {
-                    name.style.backgroundColor = otherColor;
-                }
-                name.style.color = textColor;
-            });
-        }
-
         function openGitlink() {
             window.open("https://github.com/ARRRsunny/music-player");
         }
 
-    })();
+        })();
 </script>
 </body>
 </html>
