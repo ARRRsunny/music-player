@@ -272,6 +272,8 @@
             padding: 15px;
             transition: all .35s ease-in-out;
         }
+
+        
     </style>
 </head>
 <body>
@@ -496,13 +498,14 @@
         }
 
         function loadImageAndLyrics(baseName) {
-            if (imageFiles[baseName]) {
+            if (imageFiles.hasOwnProperty(baseName)) {
                 const imageURL = URL.createObjectURL(imageFiles[baseName]);
                 songImage.src = imageURL;
             } else {
                 songImage.src = 'https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png';
             }
-            if (lyricsFiles[baseName]) {
+
+            if (lyricsFiles.hasOwnProperty(baseName)) {
                 const reader = new FileReader();
                 reader.onload = function (event) {
                     parseLyrics(event.target.result);

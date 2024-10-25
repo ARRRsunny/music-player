@@ -507,15 +507,17 @@
             audioPlayer.play();
 
             elements.songNameDisplay.textContent = songName;
-            elements.songImage.src = `http://${ADDR}/${index}/image` || 'https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png';
+            elements.songImage.src = `http://${ADDR}/${index}/image`;
+            elements.songImage.onerror = () => {
+                elements.songImage.src = 'https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png';
+            };
 
             const lyrics = httpGet(`http://${ADDR}/${index}/lyrics`);
-            parseLyrics(lyrics || 'no lyrics');
+            parseLyrics(lyrics);
             elements.rotationImage.style.animationPlayState = 'running';
             isPlaying = true;
             updatePlayPauseButton();
         }
-
         function httpGet(url) {
             const xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", url, false);
@@ -524,6 +526,10 @@
         }
 
         function parseLyrics(lrcText) {
+            if (!lrcText) {
+                elements.lyricsContainer.innerHTML = "<p>There are no lyrics available.</p>";
+                return;
+            }
             lyricsData = lrcText.split('\n').map(line => {
                 const match = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
                 if (match) {

@@ -7,8 +7,8 @@ import urllib.request as ul
 app = Flask(__name__)
 CORS(app)
 
-DIRECTORY = ".../music"   #music folder location
-HOST = "1.1.1.1"  #change to the ip use want to use
+DIRECTORY = "C:/Users/141c2/OneDrive/桌面/music"   #music folder location
+HOST = "192.168.194.251"  #change to the ip use want to use
 PORT = 1234 #0-65535
 
 logging.basicConfig(level=logging.INFO)
