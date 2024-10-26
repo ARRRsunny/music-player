@@ -24,7 +24,7 @@
             overflow-y: auto;
             overflow-x: auto;
             min-width: 1072px;
-        }
+        }   
         /* Main player container */
         .player {
             background-color: rgba(24, 24, 24, 0.9);
@@ -103,6 +103,7 @@
             transition: all .35s ease-in-out;   
             display:block;
             margin-bottom: 10px;
+            opacity: 1;
         }
         .lyrics p {
             margin: 0;
@@ -259,6 +260,7 @@
             padding-top: 10px;
             transition: all .35s ease-in-out;
             font-size: 13px;
+            
         }
         .setting {
             display: flex;
@@ -266,6 +268,7 @@
             justify-content: space-between;
             border-radius: 20px;
             padding: 15px;
+            opacity: 1;
             transition: all .35s ease-in-out;
         }
         /* Address input group */
@@ -315,18 +318,286 @@
             background-color: #3b3b3b;
             transition: all .35s ease-in-out;
         }
-        /* Responsive design for smaller screens */
-        @media (max-width: 1072px) {
-            .lyrics {
-            display: none;
-        }
-        }
 
         .progress-time {
             max-height: 10px;
             margin-top: -50px;
             min-width: 30px;
         }
+        /* Responsive design for smaller screens */
+        @media (max-width: 500px) {
+            .lyrics {
+            display: none;
+            }
+
+            img {
+                width:  200px;
+                height: 200px;
+                border-radius: 50%;
+                background-color: #739fda;
+                object-fit: cover;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: auto;
+                width: auto;
+                background-image: url('https://picsum.photos/1080/1920');
+                background-size: cover;
+                background-position: center;
+                margin: 0;
+                color: #fff;
+                flex-direction: column; 
+                overflow: hidden;
+                overflow-y: auto;
+                transition: all .35s ease-in-out;
+                min-width: 100vw;
+                min-height: 100vw;
+            }
+            /* Main player container */
+            .player {
+                background-color: rgba(24, 24, 24, 0.9);
+                box-shadow: 0 18px 40px rgba(0, 0, 0, 0.603);
+                padding: 20px;
+                border-radius: 30px;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                width: 70vw;
+                min-width: 320px;
+                box-sizing: border-box;
+                transition: all .35s ease-in-out;
+            }
+            /* Layout for left and right sections */
+            .left, .right {
+                box-sizing: border-box;
+                padding: 10px;
+            }
+            .left {
+                flex: 1 1 40%;
+                text-align: center;
+            }
+            .right {
+                flex: 1 1 60%;
+                overflow: hidden;
+                display: flex;
+
+                flex-direction: column;
+            }
+            /* Styling for song name and list */
+            .songName {
+                margin: 10px;
+            }
+            .song-list {
+                list-style: none;
+                padding: 0;
+                max-height: 200px;
+
+                overflow-y: auto;
+                margin: 5px ;
+                background-color: #282828;
+                border-radius: 15px;
+                transition: all .35s ease-in-out;
+                color: white; 
+                display: block; 
+                
+            }
+            .song-list li {
+                font-size: .6rem;
+                padding: 10px;
+                cursor: pointer;
+                border-bottom: 1px solid #333;
+                transition: all .35s ease-in-out;
+            }
+
+
+            /* Highlight effect for lyrics */
+
+            /* Heading styling */
+            h2 {
+                font-size: 1.3em;
+                margin: 10px 0;
+                overflow: hidden;
+                height: 30px;
+            }
+            /* Controls styling */
+            .controls {
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background-color: #282828;
+                border-radius: 15px;
+                padding: 5px;
+                margin-top: 5px;
+                transition: all .35s ease-in-out;
+            }
+            /* Progress bar */
+            .progress-bar {
+                flex-grow: 1;
+                height: 5px;
+                background-color: #7e7e7e;
+                border-radius: 2px;
+                margin: 0 5px;
+                cursor: pointer;
+                position: relative;
+                transition: all .35s ease-in-out;
+            }
+            .progress {
+                height: 100%;
+                background-color: #739fda;
+                border-radius: 2px;
+                width: 0;
+            }
+            /* Volume control styling */
+            .volume-control {
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background-color: #282828;
+                border-radius: 15px;
+                padding: 5px;
+                margin-top: 10px;
+                transition: all .35s ease-in-out;
+            }
+            /* Volume slider */
+            .volume-slider {
+                flex-grow: 1;
+                height: 5px;
+                background-color: #7e7e7e;
+                border-radius: 2px;
+                margin: 5px;
+                cursor: pointer;
+                position: relative;
+                color: #739fda;
+            }
+            /* Info display */
+
+            .info:hover {
+                opacity: 0;
+            }
+            /* Button styling */
+            button {
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+                font-size: 1em;
+            }
+            /* Animation for rotating image */
+            .rotate {
+                animation: rotation 20s infinite linear;
+                animation-play-state: paused;
+                transition: all 0.5s ease;
+            }
+
+            /* Radio input styles */
+            .radio-inputs {
+                height: 30px;   
+                position: relative;
+                display: flex;
+                flex-wrap: wrap;
+                border-radius: 15px;
+                background-color: #282828;
+
+                margin-top: 10px;
+                font-size: 9px;
+                transition: all .35s ease-in-out;
+            }
+            .radio-inputs .radio {
+                flex: 1 1 auto;
+                text-align: center;
+            }
+            .radio-inputs .radio input {
+                display: none;
+            }
+            .radio-inputs .radio .name {
+                
+                display: flex;
+                cursor: pointer;
+                align-items: center;
+                justify-content: center;
+                border-radius: 13px;
+                border: none;
+                padding: 9px;
+                transition: all .35s ease-in-out;
+            }
+            .radio-inputs .radio input:checked + .name {
+                background-color: #3b3b3b;
+                font-weight: 400;
+                transition: all .35s ease-in-out;
+            }
+            /* Theme switcher */
+            .setting {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-radius: 10px;
+                padding: 7px;
+                transition: all .35s ease-in-out;
+                opacity: 0;
+            }
+            /* Address input group */
+            .input-group {
+                margin-top: 20px;
+                display: none;
+            }
+            .input {
+
+                height: 25px;
+                background-color: #282828;
+                border-radius: 10px;
+                padding: 0 1rem;
+                border: 2px solid transparent;
+                font-size: 0.6rem;
+                color: #fff;
+                width: 150px;
+                transition: all .35s ease-in-out;
+            }
+            .label {
+                display: block;
+                margin-bottom: .3rem;
+                font-size: .6rem;
+                font-weight: bold;
+                color: #fff;
+                transition: all .35s ease-in-out;
+            }
+            /* Input hover effects */
+            .input:hover, .input:focus, .input:hover .input {
+                outline: none;
+                border-color: #0a0a0a;
+            }
+            /* Address button styling */
+            .addrButton {    
+                margin-top: 20px;
+                margin-left: 5px;
+                max-width: 150px;
+                height: 25px;
+                background-color: #282828;
+                border-radius: 10px;
+                padding: 0 1rem;
+                border: 2px solid transparent;
+                font-size: 0.6rem;
+                color: #fff;
+                transition: all .35s ease-in-out;
+            }
+            .addrButton:hover {
+                background-color: #3b3b3b;
+                transition: all .35s ease-in-out;
+            }
+
+            .progress-time {
+                max-height: 10px;
+                margin-top: -50px;
+                min-width: 30px;
+            }
+        }
+
+
     </style>
 </head>
 <body>
@@ -367,6 +638,10 @@
             <label class="radio">
               <input type="radio" name="mode" value="once">
               <span class="name">Once</span>
+            </label>
+            <label class="radio">
+                <input type="radio" name="mode" value="queue">
+                <span class="name">Queue</span>
             </label>
         </div>
         <!-- Theme switcher -->
@@ -611,6 +886,8 @@
                 isPlaying = false;
                 updatePlayPauseButton();
                 elements.rotationImage.style.animationPlayState = 'paused';
+            } else if (playbackMode === 'queue'){
+                playSong(currentSongIndex + 1);
             }
         }
 
@@ -625,13 +902,23 @@
         }
 
         function NextSong() {
-            currentSongIndex = (currentSongIndex + 1) % songs.length;
-            playSong(currentSongIndex);
+            if (playbackMode === 'random') {
+                const randomIndex = Math.floor(Math.random() * songs.length);
+                playSong(randomIndex);
+            } else {
+                currentSongIndex = (currentSongIndex + 1) % songs.length;
+                playSong(currentSongIndex);
+            }
         }
 
         function PreviousSong() {
-            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
-            playSong(currentSongIndex);
+            if (playbackMode === 'random') {
+                const randomIndex = Math.floor(Math.random() * songs.length);
+                playSong(randomIndex);
+            } else {
+                currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+                playSong(currentSongIndex);
+            }
         }
 
         function toggleTheme() {
