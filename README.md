@@ -14,7 +14,7 @@ You can play your music on the Web!
 - **Rotating album image**
 - **Setup server**
 - **Volume control**
-
+- **Random wallpaper**
 ### Set Up
 
 1. Edit the `main.py` file.
