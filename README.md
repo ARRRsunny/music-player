@@ -1,6 +1,15 @@
 ## MusicPlay
 ![image](https://github.com/ARRRsunny/music-player/blob/main/assets/image.png)
 You can play your music on the Web!
+# Features
+-playing your own music files
+-theme switching
+-scrolling lyrics
+-playback mode
+-radio 
+-rotating album image
+-setup server
+-volume control
 # Set up
 1. Edit the main.py python file.
 2. fill in the address you want to use.
