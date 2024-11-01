@@ -20,7 +20,7 @@ You can play your music on the Web!
 1. Edit the `main.py` file.
 2. Fill in the address you want to use.
 3. Fill in the music folder directory/path.
-4. run the program.
+4. Run the program.
 5. Open the link printed in the terminal.
 
 ### Requirement
