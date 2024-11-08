@@ -847,8 +847,12 @@
                 audioPlayer.pause();
                 elements.rotationImage.style.animationPlayState = 'paused';
             } else {
-                audioPlayer.play();
-                elements.rotationImage.style.animationPlayState = 'running';
+                if (radiostate === true){
+                    startradio();
+                } else if (radiostate === false){
+                    audioPlayer.play();
+                    elements.rotationImage.style.animationPlayState = 'running';
+                }
             }
             isPlaying = !isPlaying;
             updatePlayPauseButton();

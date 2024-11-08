@@ -12,8 +12,6 @@ app = Flask(__name__)
 
 CORS(app)
 
-DIRECTORY = "../music-player/yourmusic"   #music folder location
-HOST = "1.1.1.1"  #change to the ip use want to use
 currentradioID = 0
 timer = None
 
@@ -146,7 +144,7 @@ def radioloop():
     lengths = read_timelist(DIRECTORY)
     run_timer(currentradioID, lengths)
     info = transform_file_paths(get_files_by_id(DIRECTORY, currentradioID))
-    print("Radio loop triggered!",info,f"ID:{currentradioID}")
+    print("Radio loop triggered!",f"ID:{currentradioID}",info)
 
 
 def transform_file_paths(data):
