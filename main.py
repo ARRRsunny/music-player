@@ -15,9 +15,12 @@ CORS(app)
 currentradioID = 0
 timer = None
 
-DIRECTORY = "../"   #music folder location
-HOST = "1.1.1.1"  #change to the ip use want to use
-PORT = 1234 #0-65535
+
+
+
+DIRECTORY = "music"   #music folder location in docker
+HOST = "0.0.0.0"  #change to the ip use want to use
+PORT = 8080 #0-65535
 
 logging.basicConfig(level=logging.INFO)
 
@@ -184,6 +187,11 @@ def get_content_type(ext):
     }.get(ext, 'application/octet-stream')
 
 if __name__ == "__main__":
-    radioloop()
+    if os.path.exists(DIRECTORY):
+        radioloop()
+    else:
+        logging.error(f"no folder found {DIRECTORY}")
+        
     app.run(host=HOST, port=PORT)
+    
     
