@@ -72,23 +72,39 @@ This project is a lightweight, containerized music player application built with
    - Create a folder named `music` in the root directory.
    - Add your `.mp3`, `.flac`, `.wav`, `.lrc`, `.jpg`, and `.png` files to the `music` folder.
 
-3. **Edit the Address in `nginx.conf`**:
-   - Open `nginx.conf` and replace `youraddress:8080` with either:
-     - Your **local machine's IP address** (e.g., `192.168.x.x:8080`).
-     - Or, your **ZeroTier IP address** if you're using ZeroTier.
 
-   Example:
-   ```nginx
-   server_name 192.168.1.100:8080; # Replace with your IP
-   ```
-
-4. **Build and Start the Containers**:
+3. **Build and Start the Containers**:
 
    ```bash
-   docker-compose up --build
+   docker build -t flask-zerotier .
+   ```
+   Run the container while using, replacing <NETWORK_ID> and <API_TOKEN>:
+   ```bash
+   docker run -d \
+   --name flask-app \
+   --cap-add=NET_ADMIN \
+   --device=/dev/net/tun \
+   -e ZEROTIER_NETWORK_ID=<NETWORK_ID> \
+   -e ZEROTIER_API_TOKEN=<API_TOKEN> \
+   flask-zerotier
+   ```
+4. **Setting Zerotier**:
+   Join network:
+   ```bash
+   docker exec flask-app zerotier-cli join <NETWORK_ID>
+   200 join OK
+   ```
+   Confirm Zerotier IP:
+   ```bash
+   docker exec flask-app zerotier-cli listnetworks
+   ```
+   Get your ZeroTier address and check the service status:
+   ```bash
+   docker exec flask-app zerotier-cli status
+   200 info 998765f00d 1.2.13 ONLINE
    ```
 
-5. **Access the Application**:
+5. **Access**:
    - Open your browser and navigate to `http://<your-ip>:8080`.
 
 ---

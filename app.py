@@ -24,6 +24,7 @@ PORT = 8080 #0-65535
 
 logging.basicConfig(level=logging.INFO)
 
+"""
 @app.route("/", methods=["GET"])
 def serve_html():
     try:
@@ -31,6 +32,15 @@ def serve_html():
         with ul.urlopen(url) as client:
             htmldata = client.read().decode('utf-8')
         return htmldata
+    except Exception as e:
+        logging.error("Error serving HTML: %s", e)
+        abort(500, "Internal server error")
+"""
+
+@app.route("/", methods=["GET"])
+def serve_html():
+    try:
+        return send_file("musicplayer_server.html")
     except Exception as e:
         logging.error("Error serving HTML: %s", e)
         abort(500, "Internal server error")

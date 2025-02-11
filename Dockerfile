@@ -1,17 +1,23 @@
-# Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
-# Set the working directory
-WORKDIR /app
+# 安裝依賴及Zerotier
+RUN apt-get update && \
+    apt-get install -y curl gnupg && \
+    curl -s https://install.zerotier.com | bash
 
-# Copy the current directory contents into the container at /app
+# 複製應用代碼
 COPY . .
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
 
 
-# Expose port 8080 for the Flask app
+# 安裝Python依賴
+RUN pip install -r requirements.txt
+
+# 複製啟動腳本並設置權限
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+# 暴露端口
 EXPOSE 8080
 
-# Run app.py when the container launches
-CMD ["python", "main.py"]
+ENTRYPOINT ["/start.sh"]
+CMD ["python", "app.py"] 
