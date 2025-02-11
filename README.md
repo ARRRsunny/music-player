@@ -1,6 +1,6 @@
 # Music Player
 
-This project is a lightweight, containerized music player application built with Flask, Nginx, and Docker. It comes with a simple web-based UI for playback control, song management, and radio functionality. The application is designed to serve audio files, lyrics, and album art, while supporting various playback modes such as looping, queueing, and random play.
+This project is a lightweight, containerized music player application built with Flask and Docker. It comes with a simple web-based UI for playback control, song management, and radio functionality. The application is designed to serve audio files, lyrics, and album art, while supporting various playback modes such as looping, queueing, and random play.
 
 ![MusicPlay](https://github.com/ARRRsunny/music-player/blob/main/assets/image.png)
 
@@ -38,13 +38,11 @@ This project is a lightweight, containerized music player application built with
 
 ```
 .
-├── main.py                # Flask application
+├── app.py                # Flask application
 ├── requirements.txt       # Python dependencies
-├── nginx.conf             # Nginx configuration
 ├── Dockerfile             # Dockerfile for Flask app
-├── Dockerfile-nginx.txt   # Dockerfile for Nginx
-├── docker-compose.yml     # Docker Compose configuration
 ├── music/                 # Directory to store music files
+├── start.sh               # Setting Zerotier
 └── musicplayer_server.html # Web-based UI
 ```
 
@@ -53,7 +51,6 @@ This project is a lightweight, containerized music player application built with
 ## Prerequisites
 
 - **Docker**: Install [Docker](https://www.docker.com/get-started).
-- **Docker Compose**: Install [Docker Compose](https://docs.docker.com/compose/install/).
 - **ZeroTier (Optional)**: If you want to access the app from an external network, you can use [ZeroTier](https://www.zerotier.com/).
 - Music files should be placed in a `music` directory in the root of the project.
 
@@ -163,14 +160,6 @@ The UI (`musicplayer_server.html`) is served by the Flask backend and provides t
 
 ## Deployment and Configuration
 
-### Flask Address
-
-The Flask application runs on `0.0.0.0` to ensure it listens on all network interfaces. Nginx forwards requests from the specified address in `nginx.conf` to the Flask backend.
-
-**Important**: Update the `nginx.conf` file with your own IP address to make the application accessible from your network or ZeroTier.
-
----
-
 ## Example Use Cases
 
 1. **List Songs**:
@@ -192,46 +181,21 @@ The Flask application runs on `0.0.0.0` to ensure it listens on all network inte
 
 ---
 
-## Docker Configuration
-
-### Flask Service
-
-- **Dockerfile**:
-  - Based on `python:3.9-slim`.
-  - Installs dependencies from `requirements.txt`.
-  - Exposes port `8080` for Flask.
-
-### Nginx Service
-
-- **Dockerfile-nginx.txt**:
-  - Based on `nginx:alpine`.
-  - Copies the custom `nginx.conf` file into the container.
-  - Configures Nginx to listen and proxy requests to Flask.
-
-### Networking
-
-- Both services are connected to a `bridge` network named `app-network`.
-
----
-
 ## Troubleshooting
 
 1. **Music Directory Not Found**:
    - Ensure the `music` directory exists and contains valid audio files.
 
-2. **Nginx Fails to Start**:
-   - Check the `nginx.conf` file for syntax errors.
-
-3. **Flask Crashes**:
+2. **Flask Crashes**:
    - Check the Flask logs for errors using:
      ```bash
-     docker-compose logs flask
+     docker logs flask-app
      ```
 
-4. **API Not Accessible**:
+3. **API Not Accessible**:
    - Ensure the containers are running:
      ```bash
-     docker-compose ps
+     docker logs flask-app
      ```
 
 ---
