@@ -1,12 +1,13 @@
-from flask import Flask, jsonify, abort, send_file
+from flask import Flask, jsonify, abort, send_file, Response
 from flask_cors import CORS
+import io
 import os
 import logging
 import urllib.request as ul
 import threading
-from mutagen.wave import WAVE 
+from mutagen.wave import WAVE
 import time
-from mutagen import File
+from mutagen import File, MutagenError
 import numpy as np
 app = Flask(__name__)
 
@@ -52,15 +53,41 @@ def serve_files(song_id, file_type):
         if not files:
             abort(404, "Song not found")
 
-        ext_map = {
-            'audio': ['.mp3', '.flac', '.wav'],
-            'image': ['.jpg', '.png'],
-            'lyrics': ['.lrc']
-        }
+        if file_type == 'audio':
+            audio_path = get_audio_path(files)
+            if audio_path:
+                return send_file(audio_path, mimetype=get_content_type(os.path.splitext(audio_path)[1]))
+            abort(404, "Audio not found")
 
-        for ext in ext_map.get(file_type, []):
-            if ext in files:
+        if file_type == 'image':
+            if '.jpg' in files or '.png' in files:
+                ext = '.jpg' if '.jpg' in files else '.png'
                 return send_file(files[ext], mimetype=get_content_type(ext))
+
+            audio_path = get_audio_path(files)
+            if not audio_path:
+                abort(404, "Image not found")
+
+            image_data = extract_embedded_image(audio_path)
+            if image_data:
+                data, mime_type = image_data
+                return send_file(io.BytesIO(data), mimetype=mime_type)
+
+            abort(404, "Image not found")
+
+        if file_type == 'lyrics':
+            if '.lrc' in files:
+                return send_file(files['.lrc'], mimetype='text/plain')
+
+            audio_path = get_audio_path(files)
+            if not audio_path:
+                abort(404, "Lyrics not found")
+
+            lyrics_text = extract_embedded_lyrics(audio_path)
+            if lyrics_text:
+                return Response(lyrics_text, mimetype='text/plain')
+
+            abort(404, "Lyrics not found")
 
         abort(404, f"{file_type.capitalize()} not found")
     except Exception as e:
@@ -130,6 +157,78 @@ def list_songs_with_ids(dir_path):
 
     return songs
 
+def get_audio_path(file_map):
+    for ext in ['.mp3', '.flac', '.wav']:
+        if ext in file_map:
+            return file_map[ext]
+    return None
+
+
+def extract_embedded_image(file_path):
+    try:
+        audio = File(file_path)
+    except MutagenError as e:
+        logging.warning("Unable to read embedded artwork from %s: %s", file_path, e)
+        return None
+
+    if audio is None or not hasattr(audio, 'tags') or audio.tags is None:
+        return None
+
+    # MP3 ID3 APIC frames
+    try:
+        apics = audio.tags.getall('APIC')
+    except Exception:
+        apics = []
+
+    if apics:
+        apic = apics[0]
+        return apic.data, apic.mime
+
+    # FLAC pictures
+    if hasattr(audio, 'pictures') and audio.pictures:
+        pic = audio.pictures[0]
+        return pic.data, pic.mime
+
+    # Some formats may present a single APIC tag under a string key
+    for key in audio.tags.keys():
+        if key.startswith('APIC'):
+            tag = audio.tags[key]
+            if isinstance(tag, list):
+                tag = tag[0]
+            if hasattr(tag, 'data'):
+                mime_type = getattr(tag, 'mime', 'image/jpeg')
+                return tag.data, mime_type
+
+    return None
+
+
+def extract_embedded_lyrics(file_path):
+    try:
+        audio = File(file_path)
+    except MutagenError as e:
+        logging.warning("Unable to read embedded lyrics from %s: %s", file_path, e)
+        return None
+
+    if audio is None or not hasattr(audio, 'tags') or audio.tags is None:
+        return None
+
+    # MP3 ID3 USLT frames
+    try:
+        uslts = audio.tags.getall('USLT')
+    except Exception:
+        uslts = []
+
+    if uslts:
+        return uslts[0].text
+
+    # FLAC and Vorbis comment lyrics fields
+    for key in ['LYRICS', 'UNSYNCEDLYRICS', 'lyrics', 'LYRIC', 'TEXT']:
+        value = audio.tags.get(key)
+        if value:
+            return value[0] if isinstance(value, list) else value
+
+    return None
+
 def read_timelist(dir_path):
     lengthlist = {}
     song_id = 0
@@ -137,11 +236,24 @@ def read_timelist(dir_path):
         for file in files:
             if file.endswith(('.mp3', '.flac', '.wav')):
                 file_path = os.path.join(root, file)
-                audio = File(file_path)
-                if audio is not None:
+                try:
+                    audio = File(file_path)
+                except MutagenError as e:
+                    logging.warning("Skipping invalid audio file %s: %s", file_path, e)
+                    continue
+
+                if audio is None or not hasattr(audio, 'info') or audio.info is None:
+                    logging.warning("Skipping unsupported or unreadable audio file %s", file_path)
+                    continue
+
+                try:
                     length = int(audio.info.length)
-                    lengthlist[song_id] = length
-                    song_id += 1
+                except Exception as e:
+                    logging.warning("Unable to read length from %s: %s", file_path, e)
+                    continue
+
+                lengthlist[song_id] = length
+                song_id += 1
     return lengthlist
 
 def run_timer(song_id, lengthlist):
