@@ -147,12 +147,28 @@
             overflow: hidden;
         }
 
+        .cache-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.2s ease;
+            z-index: 1;
+        }
+
         .progress {
+            position: absolute;
+            top: 0;
+            left: 0;
             height: 100%;
             background: var(--primary);
             border-radius: 3px;
             width: 0%;
             transition: width 0.1s linear;
+            z-index: 2;
         }
 
         .time-display {
@@ -184,7 +200,7 @@
         .volume-slider {
             flex: 1;
             -webkit-appearance: none;
-            height: 4px;
+            height: 4px;            
             border-radius: 2px;
             background: rgba(255, 255, 255, 0.2);
             outline: none;
@@ -440,6 +456,7 @@
             <div class="progress-container">
                 <span class="time-display" id="time">0:00</span>
                 <div class="progress-bar" id="progressBar">
+                    <div class="cache-progress" id="cacheProgress"></div>
                     <div class="progress" id="progress"></div>
                 </div>
             </div>
@@ -527,6 +544,7 @@
             playPauseButton: document.getElementById('playPauseButton'),
             progressBar: document.getElementById('progressBar'),
             progress: document.getElementById('progress'),
+            cacheProgress: document.getElementById('cacheProgress'),
             volumeSlider: document.getElementById('volumeSlider'),
             Gitlinkopen: document.getElementById('GithublinkBu'),
             rotationImage: document.getElementById('rotationImage'),
@@ -568,6 +586,7 @@
             updateLyricsDisplay(audioPlayer.currentTime);
         });
 
+        audioPlayer.addEventListener('progress', updateCacheDisplay);
         audioPlayer.addEventListener('ended', handleSongEnd);
 
         function refillADDR() {
@@ -611,13 +630,32 @@
             });
         }
 
-        function playSong(index) {
+        async function playSong(index) {
             currentSongIndex = index;
             const songName = songs[index];
+            const audioUrl = `http://${ADDR}/${index}/audio`;
 
             lastLyricIndex = -1;
 
-            audioPlayer.src = `http://${ADDR}/${index}/audio`;
+            // Fetch or load audio from Web Cache API
+            try {
+                const cache = await caches.open(CACHE_NAME);
+                let response = await cache.match(audioUrl);
+
+                if (!response) {
+                    response = await fetch(audioUrl);
+                    if (response.ok) {
+                        cache.put(audioUrl, response.clone());
+                    }
+                }
+
+                const blob = await response.blob();
+                audioPlayer.src = URL.createObjectURL(blob);
+            } catch (e) {
+                // Fallback to direct HTTP URL if Cache API fails
+                audioPlayer.src = audioUrl;
+            }
+
             audioPlayer.play();
 
             elements.songNameDisplay.textContent = songName;
@@ -632,13 +670,23 @@
                 .catch(() => parseLyrics(""));
 
             elements.rotationImage.style.animationPlayState = 'running';
-            elements.coverWrapper.classList.add('is-playing'); // Triggers the scale up & glow
+            elements.coverWrapper.classList.add('is-playing');
             
             isPlaying = true;
             updatePlayPauseButton();
-            
         }
 
+        function updateCacheDisplay() {
+            if (audioPlayer.duration > 0 && audioPlayer.buffered.length > 0) {
+                // Get current buffer end range
+                const bufferedEnd = audioPlayer.buffered.end(audioPlayer.buffered.length - 1);
+                const duration = audioPlayer.duration;
+                const bufferedPercent = (bufferedEnd / duration) * 100;
+                elements.cacheProgress.style.width = `${bufferedPercent}%`;
+            } else {
+                elements.cacheProgress.style.width = '0%';
+            }
+        }
         function parseLyrics(lrcText) {
             if (!lrcText) {
                 elements.lyricsContainer.innerHTML = "<p>There are no lyrics available.</p>";
@@ -717,6 +765,8 @@
             const minutes = Math.floor(currentTime / 60);
             const seconds = Math.floor(currentTime % 60);
             document.getElementById('time').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            updateCacheDisplay();
         }
 
         function changeVolume() {
