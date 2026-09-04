@@ -120,6 +120,29 @@ def radio_state():
         logging.error("Error retrieving radio state: %s", e)
         abort(500, "Internal server error")
 
+@app.route("/radio/<direction>", methods=["POST"])
+def change_radio_song(direction):
+    try:
+        global currentradioID
+        songs = list_songs_with_ids(DIRECTORY)
+        if not songs:
+            abort(404, "No songs available")
+        if direction not in ("next", "previous"):
+            abort(400, "Unknown radio direction")
+
+        step = 1 if direction == "next" else -1
+        currentradioID = (currentradioID + step) % len(songs)
+        lengths = read_timelist(DIRECTORY)
+        run_timer(currentradioID, lengths)
+        return jsonify({
+            "song_id": currentradioID,
+            "song_name": songs[currentradioID],
+            "progress": "00:00"
+        })
+    except Exception as e:
+        logging.error("Error changing radio song: %s", e)
+        abort(500, "Internal server error")
+
 @app.route("/state", methods=["GET"])
 def server_state():
     try:
@@ -166,7 +189,7 @@ class CountdownTimer:
             time.sleep(1)
             with self._lock:
                 self.elapsed += 1
-        if self.callback:
+        if self.running and self.callback:
             self.callback()
 
     def stop(self):
@@ -256,6 +279,8 @@ def run_timer(song_id, lengthlist):
     global timer
     timeleng = lengthlist.get(song_id)
     if timeleng:
+        if timer and timer._thread is not threading.current_thread():
+            timer.stop()
         timer = CountdownTimer(timeleng, callback=radioloop)
         timer.start()
 
@@ -315,7 +340,7 @@ def get_embedded_lyrics(file_path):
         if audio is None or getattr(audio, 'tags', None) is None:
             return None
 
-        if file_path.lower().endswith('.mp3'):
+        if file_path.lower().endswith(('.mp3', '.wav')):
             if hasattr(audio.tags, 'getall'):
                 for frame in audio.tags.getall('USLT'):
                     if frame.text:
@@ -383,6 +408,7 @@ def get_content_type(ext):
 
 if __name__ == "__main__":
     if os.path.exists(DIRECTORY):
+        logging.info(f"Music directory found: {DIRECTORY}")
         radioloop()
     else:
         logging.error(f"no folder found {DIRECTORY}")

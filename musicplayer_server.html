@@ -71,6 +71,12 @@
             min-width: 0; /* Prevents grid blowout */
         }
 
+        .right.radio-mode .lyrics {
+            flex: 0 1 220px;
+            height: 220px;
+            min-height: 0;
+        }
+
         /* Image Album Cover */
         .cover-wrapper {
             position: relative;
@@ -89,13 +95,14 @@
             transform: scale(1);
         }
         img#songImage {
-            width: 100%;
-            height: 100%;
+            width: 250px;
+            height: 250px;
             border-radius: 50%;
             object-fit: cover;
             border: 4px solid var(--panel-border);
             transition: box-shadow 0.5s ease;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            
         }
 
         .rotate {
@@ -251,6 +258,42 @@
         .radio-inputs .radio input:checked + .name {
             background: var(--primary);
             color: #fff;
+        }
+
+        .radio-control {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--panel-glass);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+        }
+
+        .radio-control button {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--hover-bg);
+            flex: 0 0 34px;
+        }
+
+        .radio-control button:hover {
+            background: var(--primary);
+            opacity: 1;
+        }
+
+        .radio-track {
+            min-width: 0;
+            flex: 1;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Buttons & Icons */
@@ -419,7 +462,11 @@
             font-size: 0.85rem;
             color: var(--text-sub);
         }
-
+        .right.radio-mode .lyrics {
+            flex: 0 1 445px;
+            height: 445px;
+            min-height: 0;
+        }
         /* Responsive Breakpoints */
         @media (max-width: 820px) {
             .player {
@@ -435,6 +482,11 @@
 
             .lyrics {
                 height: 120px;
+            }
+            .right.radio-mode .lyrics {
+                flex: 0 1 220px;
+                height: 220px;
+                min-height: 0;
             }
         }
     </style>
@@ -501,6 +553,7 @@
                 <span class="name">Radio</span>
             </label>
         </div>
+
     </div>
 
     <!-- Right Column: Details, Lyrics, Queue -->
@@ -514,6 +567,15 @@
         </div>
 
         <div class="lyrics" id="lyricsContainer">Lyrics will appear here...</div>
+        <div class="radio-control" id="radioControl">
+            <button id="radioPrevious" title="Previous radio song" aria-label="Previous radio song">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+            <span class="radio-track" id="radioTrack">Radio ready</span>
+            <button id="radioNext" title="Next radio song" aria-label="Next radio song">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M16 18h2V6h-2M6 18l8.5-6L6 6v12z"/></svg>
+            </button>
+        </div>
         <ul class="song-list" id="songList"></ul>
     </div>
 
@@ -555,7 +617,12 @@
             addrinput: document.getElementById('Address'),
             addrButton: document.getElementById('addrButton'),
             inputGroup: document.getElementById('input-group'),
-            radiobar: document.getElementById('radiobar')
+            rightColumn: document.querySelector('.right'),
+            radiobar: document.getElementById('radiobar'),
+            radioControl: document.getElementById('radioControl'),
+            radioTrack: document.getElementById('radioTrack'),
+            radioPrevious: document.getElementById('radioPrevious'),
+            radioNext: document.getElementById('radioNext')
         };
 
         let isPlaying = false;
@@ -580,6 +647,8 @@
         elements.addrButton.addEventListener('click', refillADDR);
         elements.Gitlinkopen.addEventListener('click', openGitlink);
         elements.radiobar.addEventListener('change', radiocheck);
+        elements.radioPrevious.addEventListener('click', () => changeRadioSong('previous'));
+        elements.radioNext.addEventListener('click', () => changeRadioSong('next'));
 
         audioPlayer.addEventListener('timeupdate', () => {
             updateProgress();
@@ -659,6 +728,7 @@
             audioPlayer.play();
 
             elements.songNameDisplay.textContent = songName;
+            elements.radioTrack.textContent = songName;
             elements.songImage.src = `http://${ADDR}/${index}/image`;
             elements.songImage.onerror = () => {
                 elements.songImage.src = 'https://raw.githubusercontent.com/ARRRsunny/music-player/main/assets/defapic.png';
@@ -789,7 +859,9 @@
 
         function radiocheck() {
             radiostate = (playbackMode === 'radio');
+            elements.rightColumn.classList.toggle('radio-mode', radiostate);
             elements.songList.style.display = radiostate ? 'none' : 'block';
+            elements.radioControl.style.display = radiostate ? 'flex' : 'none';
             if (radiostate) startradio();
         }
 
@@ -802,6 +874,20 @@
                     audioPlayer.currentTime = mins * 60 + secs;
                 })
                 .catch(error => console.error('Error starting radio:', error));
+        }
+
+        async function changeRadioSong(direction) {
+            if (!radiostate) return;
+
+            try {
+                const response = await fetch(`http://${ADDR}/radio/${direction}`, { method: 'POST' });
+                if (!response.ok) throw new Error(`Radio switch failed: ${response.status}`);
+                const data = await response.json();
+                await playSong(data.song_id);
+                audioPlayer.currentTime = 0;
+            } catch (error) {
+                console.error('Error changing radio song:', error);
+            }
         }
 
         function changePlaybackMode(event) {
