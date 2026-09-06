@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, abort, send_file, Response, request, session, g
 from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 import os
 import logging
 import urllib.request as ul
@@ -21,13 +22,26 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('MUSIC_PLAYER_SECRET_KEY') or secrets.token_hex(32)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
-app.config['INVITE_CODE'] = os.environ.get('MUSIC_PLAYER_INVITE_CODE') or "123456789"  # Default invite code, should be changed in production
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('MUSIC_PLAYER_HTTPS', '').lower() == 'true'
+app.config['INVITE_CODE'] = os.environ.get('MUSIC_PLAYER_INVITE_CODE') or secrets.token_hex(16)
 
-CORS(app)
+cors_origins = os.environ.get('MUSIC_PLAYER_CORS_ORIGINS', '').strip()
+if cors_origins:
+    CORS(app, origins=[origin.strip() for origin in cors_origins.split(',')], supports_credentials=True)
 
 currentradioID = 0
 timer = None
+HOST = os.environ.get('MUSIC_PLAYER_HOST', '0.0.0.0')
+PORT = int(os.environ.get('MUSIC_PLAYER_PORT', '8080'))
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    response.headers.setdefault('X-Frame-Options', 'DENY')
+    response.headers.setdefault('Referrer-Policy', 'no-referrer')
+    response.headers.setdefault('Permissions-Policy', 'microphone=(), camera=()')
+    return response
 
 
 def get_app_root():
@@ -231,6 +245,8 @@ def serve_files(song_id, file_type):
                 return Response(image_data, mimetype=mime_type)
 
         abort(404, f"{file_type.capitalize()} not found")
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error("Error serving files: %s", e)
         abort(500, "Internal server error")

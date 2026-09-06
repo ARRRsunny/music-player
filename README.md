@@ -12,7 +12,8 @@ A lightweight Flask-based music server with a simple web UI for playback, lyrics
 - **Lyrics Support**: Serve `.lrc` lyrics files or embedded lyrics from audio metadata.
 - **Album Art**: Serve `.jpg` and `.png` images or embedded cover art.
 - **Song Listing API**: List available songs with unique IDs.
-- **Web UI**: `musicplayer_server.html` provides a browser-based player interface.
+- **Web UI**: `musicplayer_server.html` provides playback modes, lyrics, album art, radio mode, and light/dark themes.
+- **Authentication**: Invite-only sign-up with password-hashed login sessions.
 - **Windows Executable**: A bundled `music_server.exe` is included for easy launch.
 
 ---
@@ -65,6 +66,18 @@ $env:MUSIC_PLAYER_INVITE_CODE = "your-private-invite-code"
 
 The server stores accounts in `music_player_users.db`. Keep the invite code private.
 
+For a deployed instance, also set a stable session key. The optional settings below
+enable HTTPS cookies and cross-origin clients explicitly:
+
+```powershell
+$env:MUSIC_PLAYER_SECRET_KEY = "a-long-random-secret"
+$env:MUSIC_PLAYER_HTTPS = "true"
+$env:MUSIC_PLAYER_CORS_ORIGINS = "https://music.example.com"
+```
+
+`MUSIC_PLAYER_CORS_ORIGINS` accepts a comma-separated list. CORS is disabled by
+default, and sign-up is disabled unless `MUSIC_PLAYER_INVITE_CODE` is configured.
+
 1. Place your music files under the `music/` folder.
    - Supported audio: `.mp3`, `.flac`, `.wav`
    - Supported lyrics: `.lrc`
@@ -94,6 +107,21 @@ The server uses the local `music/` folder first, so files should be available in
 
 ## API Endpoints
 
+Music and radio endpoints require an authenticated session. The browser stores
+the session in an HTTP-only cookie.
+
+- `GET /auth/me`
+  - Returns the current authentication status and username.
+
+- `POST /auth/signup`
+  - Creates an account using `username`, `password`, and `invite_code`.
+
+- `POST /auth/login`
+  - Signs in using `username` and `password`.
+
+- `POST /auth/logout`
+  - Clears the current session.
+
 - `GET /`
   - Serves the web UI from `musicplayer_server.html`.
 
@@ -109,6 +137,12 @@ The server uses the local `music/` folder first, so files should be available in
 
 - `GET /radio`
   - Returns the current radio song ID and elapsed playback time.
+
+- `POST /radio/<direction>`
+  - Changes the radio song. `<direction>` must be `next` or `previous`.
+
+- `GET /state`
+  - Returns server, library, and radio status information.
 
 ---
 
@@ -129,6 +163,9 @@ The server uses the local `music/` folder first, so files should be available in
 - **Audio returns 500**
   - Check the server logs for path or `send_file` errors.
   - Confirm the song ID maps to an existing audio file.
+
+- **API returns 401**
+  - Sign in through the web UI before requesting songs, audio, lyrics, images, or radio state.
 
 - **UI does not load**
   - Make sure `musicplayer_server.html` is present in the project root.

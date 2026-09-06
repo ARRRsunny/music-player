@@ -880,7 +880,8 @@
         }
 
         function apiUrl(path) {
-            return `http://${ADDR}${path}`;
+            const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+            return `${protocol}//${ADDR}${path}`;
         }
 
         async function checkAuthentication() {
@@ -1032,7 +1033,7 @@
         }
         function parseLyrics(lrcText) {
             if (!lrcText) {
-                elements.lyricsContainer.innerHTML = "<p>There are no lyrics available.</p>";
+                elements.lyricsContainer.replaceChildren(createLyricElement('There are no lyrics available.'));
                 lyricsData = [];
                 return;
             }
@@ -1045,7 +1046,15 @@
                 }
             }).filter(Boolean);
 
-            elements.lyricsContainer.innerHTML = lyricsData.map(lyric => `<p>${lyric.text}</p>`).join('');
+            elements.lyricsContainer.replaceChildren(
+                ...lyricsData.map(lyric => createLyricElement(lyric.text))
+            );
+        }
+
+        function createLyricElement(text) {
+            const element = document.createElement('p');
+            element.textContent = text;
+            return element;
         }
 
         function updateLyricsDisplay(currentTime) {
