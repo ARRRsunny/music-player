@@ -469,24 +469,106 @@
         }
         /* Responsive Breakpoints */
         @media (max-width: 820px) {
-            .player {
-                grid-template-columns: 1fr;
-                max-width: 480px;
-                padding: 24px;
+            body {
+                padding: 12px;
+                align-items: flex-start; /* Better vertical scrolling flow on short phones */
             }
 
+            .player {
+                grid-template-columns: 1fr;
+                max-width: 100%;
+                padding: 20px 16px;
+                gap: 20px;
+                border-radius: 20px;
+            }
+
+            /* Cover Art & Title */
             .cover-wrapper {
-                width: 180px;
+                width: 160px;
+                height: 160px;
+                margin-bottom: 12px;
+            }
+
+            img#songImage {
+                width: 160px;
+                height: 160px;
+            }
+
+            h2#songName {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+
+            /* Controls & Touch Targets */
+            .controls-wrapper {
+                padding: 12px;
+                gap: 10px;
+            }
+
+            .action-buttons {
+                gap: 24px;
+            }
+
+            .action-buttons button {
+                width: 44px;
+                height: 44px;
+            }
+
+            .btn-primary {
+                width: 52px;
+                height: 52px;
+            }
+
+            .volume-control {
+                padding: 10px 14px;
+                margin-top: 8px;
+            }
+
+            /* Horizontally Scrollable Playback Mode Selector */
+            .radio-inputs {
+                overflow-x: auto;
+                white-space: nowrap;
+                scrollbar-width: none; /* Firefox */
+                -ms-overflow-style: none; /* IE/Edge */
+                margin-top: 8px;
+            }
+
+            .radio-inputs::-webkit-scrollbar {
+                display: none; /* Chrome/Safari */
+            }
+
+            .radio-inputs .radio {
+                flex: 0 0 72px; /* Fixed width for smooth scroll items */
+            }
+
+            /* Right Column: Lyrics & Song List */
+            .lyrics {
+                height: 180px;
+                padding: 12px;
+                font-size: 0.85rem;
+            }
+
+            .right.radio-mode .lyrics {
+                flex: none;
+                height: 280px;
+            }
+
+            .song-list {
                 height: 180px;
             }
 
-            .lyrics {
-                height: 120px;
+            .song-list li {
+                padding: 12px; /* Larger tap targets */
             }
-            .right.radio-mode .lyrics {
-                flex: 0 1 220px;
-                height: 220px;
-                min-height: 0;
+
+            /* Inputs & Address Group */
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .addrButton {
+                width: 100%;
             }
         }
     </style>
