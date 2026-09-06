@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, abort, send_file, Response
+from flask import Flask, jsonify, abort, send_file, Response, request, session, g
 from flask_cors import CORS
 import os
 import logging
@@ -6,12 +6,23 @@ import urllib.request as ul
 import threading
 import socket
 import webbrowser
+import secrets
+import sqlite3
+import hmac
+from functools import wraps
 from io import BytesIO
 import sys
 import time
 from mutagen import File
 import numpy as np
 app = Flask(__name__)
+
+# Set MUSIC_PLAYER_SECRET_KEY in production so sessions survive restarts.
+app.config['SECRET_KEY'] = os.environ.get('MUSIC_PLAYER_SECRET_KEY') or secrets.token_hex(32)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+app.config['INVITE_CODE'] = os.environ.get('MUSIC_PLAYER_INVITE_CODE') or "123456789"  # Default invite code, should be changed in production
 
 CORS(app)
 
@@ -42,8 +53,130 @@ def get_external_or_bundled_path(relative_path):
 APP_ROOT = get_app_root()
 DIRECTORY = get_external_or_bundled_path("music")   # music folder location in the executable directory or bundle
 HTML_PATH = get_resource_path('musicplayer_server.html')
+DATABASE_PATH = os.path.join(APP_ROOT, 'music_player_users.db')
 
 logging.basicConfig(level=logging.INFO)
+
+
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(DATABASE_PATH)
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+
+@app.teardown_appcontext
+def close_db(exception=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+
+def init_db():
+    with sqlite3.connect(DATABASE_PATH) as db:
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+
+init_db()
+
+
+def login_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({'error': 'Authentication required'}), 401
+        return view(*args, **kwargs)
+    return wrapped_view
+
+
+@app.route('/auth/me', methods=['GET'])
+def auth_me():
+    user_id = session.get('user_id')
+    if user_id is None:
+        return jsonify({'authenticated': False})
+
+    user = get_db().execute(
+        'SELECT username FROM users WHERE id = ?', (user_id,)
+    ).fetchone()
+    if user is None:
+        session.clear()
+        return jsonify({'authenticated': False})
+    return jsonify({'authenticated': True, 'username': user['username']})
+
+
+@app.route('/auth/signup', methods=['POST'])
+def signup():
+    data = request.get_json(silent=True) or {}
+    username = str(data.get('username', '')).strip()
+    password = str(data.get('password', ''))
+    invite_code = str(data.get('invite_code', ''))
+
+    configured_invite_code = app.config.get('INVITE_CODE')
+    if not configured_invite_code:
+        return jsonify({'error': 'Sign-up is not configured on this server.'}), 503
+    if not hmac.compare_digest(invite_code, configured_invite_code):
+        return jsonify({'error': 'Invalid invite code.'}), 403
+
+    if not 3 <= len(username) <= 32:
+        return jsonify({'error': 'Username must be 3-32 characters.'}), 400
+    if len(password) < 8:
+        return jsonify({'error': 'Password must be at least 8 characters.'}), 400
+
+    db = get_db()
+    existing_user = db.execute(
+        'SELECT 1 FROM users WHERE username = ? COLLATE NOCASE',
+        (username,)
+    ).fetchone()
+    if existing_user is not None:
+        return jsonify({'error': 'That username is already registered.'}), 409
+
+    from werkzeug.security import generate_password_hash
+    try:
+        cursor = db.execute(
+            'INSERT INTO users (username, password_hash) VALUES (?, ?)',
+            (username, generate_password_hash(password))
+        )
+        db.commit()
+    except sqlite3.IntegrityError:
+        return jsonify({'error': 'That username is already registered.'}), 409
+
+    session.clear()
+    session['user_id'] = cursor.lastrowid
+    session['username'] = username
+    return jsonify({'authenticated': True, 'username': username}), 201
+
+
+@app.route('/auth/login', methods=['POST'])
+def login():
+    data = request.get_json(silent=True) or {}
+    username = str(data.get('username', '')).strip()
+    password = str(data.get('password', ''))
+
+    user = get_db().execute(
+        'SELECT id, username, password_hash FROM users WHERE username = ? COLLATE NOCASE',
+        (username,)
+    ).fetchone()
+    from werkzeug.security import check_password_hash
+    if user is None or not check_password_hash(user['password_hash'], password):
+        return jsonify({'error': 'Invalid username or password.'}), 401
+
+    session.clear()
+    session['user_id'] = user['id']
+    session['username'] = user['username']
+    return jsonify({'authenticated': True, 'username': user['username']})
+
+
+@app.route('/auth/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return jsonify({'authenticated': False})
 
 """
 @app.route("/", methods=["GET"])
@@ -68,6 +201,7 @@ def serve_html():
         abort(500, "Internal server error")
 
 @app.route("/<int:song_id>/<file_type>", methods=["GET"])
+@login_required
 def serve_files(song_id, file_type):
     try:
         files = get_files_by_id(DIRECTORY, song_id)
@@ -102,6 +236,7 @@ def serve_files(song_id, file_type):
         abort(500, "Internal server error")
 
 @app.route("/songs", methods=["GET"])
+@login_required
 def list_songs():
     try:
         song_list = list_songs_with_ids(DIRECTORY)
@@ -111,6 +246,7 @@ def list_songs():
         abort(500, "Internal server error")
 
 @app.route("/radio", methods=["GET"])
+@login_required
 def radio_state():
     try:
         current_progress = timer.get_elapsed_time() if timer else "00:00"
@@ -121,6 +257,7 @@ def radio_state():
         abort(500, "Internal server error")
 
 @app.route("/radio/<direction>", methods=["POST"])
+@login_required
 def change_radio_song(direction):
     try:
         global currentradioID
@@ -144,6 +281,7 @@ def change_radio_song(direction):
         abort(500, "Internal server error")
 
 @app.route("/state", methods=["GET"])
+@login_required
 def server_state():
     try:
         songs = list_songs_with_ids(DIRECTORY)
@@ -407,6 +545,7 @@ def get_content_type(ext):
 
 
 if __name__ == "__main__":
+    init_db()
     if os.path.exists(DIRECTORY):
         logging.info(f"Music directory found: {DIRECTORY}")
         radioloop()
@@ -419,7 +558,8 @@ if __name__ == "__main__":
         print(f" - {addr}")
 
     HOST = input("Enter the IP address to use: ") or "0.0.0.0"
-    PORT = int(input("Enter the port to use: ") or "8080")    
+    PORT = int(input("Enter the port to use: ") or "8080")
+    logging.info("Invite Code: %s", app.config.get('INVITE_CODE'))
 
     def open_browser_on_start():
         try:

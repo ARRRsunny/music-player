@@ -55,6 +55,16 @@ pip install -r requirements.txt
 
 ## Running from Source
 
+Before starting the server, configure the invite code required for new accounts.
+
+PowerShell:
+
+```powershell
+$env:MUSIC_PLAYER_INVITE_CODE = "your-private-invite-code"
+```
+
+The server stores accounts in `music_player_users.db`. Keep the invite code private.
+
 1. Place your music files under the `music/` folder.
    - Supported audio: `.mp3`, `.flac`, `.wav`
    - Supported lyrics: `.lrc`

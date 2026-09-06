@@ -206,6 +206,7 @@
 
         .volume-slider {
             flex: 1;
+            appearance: none;
             -webkit-appearance: none;
             height: 4px;            
             border-radius: 2px;
@@ -214,6 +215,7 @@
         }
 
         .volume-slider::-webkit-slider-thumb {
+            appearance: none;
             -webkit-appearance: none;
             width: 12px;
             height: 12px;
@@ -436,6 +438,94 @@
             border-color: var(--primary);
         }
 
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .auth-card {
+            width: min(100%, 380px);
+            padding: 28px;
+            background: var(--bg-glass);
+            border: 1px solid var(--panel-border);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .auth-card h1 {
+            margin-bottom: 8px;
+            font-size: 1.5rem;
+        }
+
+        .auth-card p {
+            margin-bottom: 20px;
+            color: var(--text-sub);
+            font-size: 0.85rem;
+        }
+
+        .auth-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .auth-form input {
+            width: 100%;
+            height: 42px;
+            padding: 0 12px;
+            color: var(--text-main);
+            background: var(--panel-glass);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        .invite-code-field {
+            display: none;
+        }
+
+        .auth-form button {
+            height: 42px;
+            margin-top: 4px;
+            background: var(--primary);
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .auth-switch {
+            margin: 18px 0 0 !important;
+            text-align: center;
+        }
+
+        .auth-switch button {
+            color: var(--text-main);
+            text-decoration: underline;
+        }
+
+        .auth-error {
+            min-height: 18px;
+            margin: 0 !important;
+            color: #fca5a5 !important;
+        }
+
+        .user-session {
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-session button {
+            color: var(--text-sub);
+            font-size: 0.8rem;
+        }
+
         .addrButton {
             height: 38px;
             padding: 0 16px;
@@ -445,7 +535,6 @@
             font-weight: 500;
         }
 
-        /* Footer Info & Settings Bar */
         .bottom-bar {
             grid-column: 1 / -1;
             display: flex;
@@ -467,11 +556,11 @@
             height: 445px;
             min-height: 0;
         }
-        /* Responsive Breakpoints */
+        
         @media (max-width: 820px) {
             body {
                 padding: 12px;
-                align-items: flex-start; /* Better vertical scrolling flow on short phones */
+                align-items: flex-start;
             }
 
             .player {
@@ -524,24 +613,23 @@
                 margin-top: 8px;
             }
 
-            /* Horizontally Scrollable Playback Mode Selector */
+
             .radio-inputs {
                 overflow-x: auto;
                 white-space: nowrap;
-                scrollbar-width: none; /* Firefox */
-                -ms-overflow-style: none; /* IE/Edge */
+                scrollbar-width: none;
+                -ms-overflow-style: none; 
                 margin-top: 8px;
             }
 
             .radio-inputs::-webkit-scrollbar {
-                display: none; /* Chrome/Safari */
+                display: none; 
             }
 
             .radio-inputs .radio {
-                flex: 0 0 72px; /* Fixed width for smooth scroll items */
+                flex: 0 0 72px; 
             }
 
-            /* Right Column: Lyrics & Song List */
             .lyrics {
                 height: 180px;
                 padding: 12px;
@@ -558,10 +646,9 @@
             }
 
             .song-list li {
-                padding: 12px; /* Larger tap targets */
+                padding: 12px;
             }
 
-            /* Inputs & Address Group */
             .input-group {
                 flex-direction: column;
                 align-items: stretch;
@@ -574,6 +661,21 @@
     </style>
 </head>
 <body>
+
+<div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+        <h1 id="authTitle">Sign in</h1>
+        <p id="authDescription">Sign in to access your music player.</p>
+        <form class="auth-form" id="authForm">
+            <input id="authUsername" type="text" placeholder="Username" minlength="3" maxlength="32" autocomplete="username" required>
+            <input id="authPassword" type="password" placeholder="Password" minlength="8" autocomplete="current-password" required>
+            <input class="invite-code-field" id="authInviteCode" type="text" placeholder="Invite code" autocomplete="off">
+            <p class="auth-error" id="authError" role="alert"></p>
+            <button type="submit" id="authSubmit">Sign in</button>
+        </form>
+        <p class="auth-switch"><span id="authSwitchText">Need an account?</span> <button type="button" id="authSwitch">Sign up</button></p>
+    </div>
+</div>
 
 <div class="player" id="player">
     <!-- Left Column: Controls & Artwork -->
@@ -673,6 +775,10 @@
         <button id="themeswitch" title="Toggle Theme">
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm0 18a8 8 0 118-8 8 8 0 01-8 8z"/></svg>
         </button>
+        <div class="user-session" id="userSession">
+            <span id="loggedInUser"></span>
+            <button id="logoutButton" type="button">Log out</button>
+        </div>
     </div>
 </div>
 
@@ -704,7 +810,21 @@
             radioControl: document.getElementById('radioControl'),
             radioTrack: document.getElementById('radioTrack'),
             radioPrevious: document.getElementById('radioPrevious'),
-            radioNext: document.getElementById('radioNext')
+            radioNext: document.getElementById('radioNext'),
+            authOverlay: document.getElementById('authOverlay'),
+            authForm: document.getElementById('authForm'),
+            authTitle: document.getElementById('authTitle'),
+            authDescription: document.getElementById('authDescription'),
+            authUsername: document.getElementById('authUsername'),
+            authPassword: document.getElementById('authPassword'),
+            authInviteCode: document.getElementById('authInviteCode'),
+            authError: document.getElementById('authError'),
+            authSubmit: document.getElementById('authSubmit'),
+            authSwitch: document.getElementById('authSwitch'),
+            authSwitchText: document.getElementById('authSwitchText'),
+            userSession: document.getElementById('userSession'),
+            loggedInUser: document.getElementById('loggedInUser'),
+            logoutButton: document.getElementById('logoutButton')
         };
 
         let isPlaying = false;
@@ -716,8 +836,10 @@
         let lyricsData = [];
         let ADDR = "";
         let radiostate = false;
+        let authMode = 'login';
 
         setaddr(window.location.host);
+        checkAuthentication();
 
         elements.playPauseButton.addEventListener('click', togglePlayPause);
         elements.progressBar.addEventListener('click', seek);
@@ -731,6 +853,9 @@
         elements.radiobar.addEventListener('change', radiocheck);
         elements.radioPrevious.addEventListener('click', () => changeRadioSong('previous'));
         elements.radioNext.addEventListener('click', () => changeRadioSong('next'));
+        elements.authForm.addEventListener('submit', submitAuthentication);
+        elements.authSwitch.addEventListener('click', toggleAuthMode);
+        elements.logoutButton.addEventListener('click', logout);
 
         audioPlayer.addEventListener('timeupdate', () => {
             updateProgress();
@@ -748,21 +873,89 @@
             if (validIpAddress(AD)) {
                 ADDR = AD;
                 elements.inputGroup.style.display = 'none';
-                getsonglist();
             } else {
                 elements.inputGroup.style.display = 'flex';
                 elements.addrinput.value = AD;
             }
         }
 
+        function apiUrl(path) {
+            return `http://${ADDR}${path}`;
+        }
+
+        async function checkAuthentication() {
+            try {
+                const response = await fetch(apiUrl('/auth/me'));
+                const data = await response.json();
+                if (data.authenticated) finishAuthentication(data.username);
+            } catch (error) {
+                elements.authError.textContent = 'Unable to connect to the music server.';
+            }
+        }
+
+        async function submitAuthentication(event) {
+            event.preventDefault();
+            elements.authError.textContent = '';
+            const endpoint = authMode === 'login' ? '/auth/login' : '/auth/signup';
+
+            try {
+                const response = await fetch(apiUrl(endpoint), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: elements.authUsername.value,
+                        password: elements.authPassword.value,
+                        invite_code: elements.authInviteCode.value
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Authentication failed.');
+                finishAuthentication(data.username);
+            } catch (error) {
+                elements.authError.textContent = error.message;
+            }
+        }
+
+        function finishAuthentication(username) {
+            elements.authOverlay.style.display = 'none';
+            elements.loggedInUser.textContent = username;
+            elements.userSession.style.display = 'flex';
+            getsonglist();
+        }
+
+        function toggleAuthMode() {
+            authMode = authMode === 'login' ? 'signup' : 'login';
+            const isSignup = authMode === 'signup';
+            elements.authTitle.textContent = isSignup ? 'Create account' : 'Sign in';
+            elements.authDescription.textContent = isSignup
+                ? 'Create an account to use your music player.'
+                : 'Sign in to access your music player.';
+            elements.authSubmit.textContent = isSignup ? 'Sign up' : 'Sign in';
+            elements.authSwitchText.textContent = isSignup ? 'Already have an account?' : 'Need an account?';
+            elements.authSwitch.textContent = isSignup ? 'Sign in' : 'Sign up';
+            elements.authPassword.autocomplete = isSignup ? 'new-password' : 'current-password';
+            elements.authInviteCode.style.display = isSignup ? 'block' : 'none';
+            elements.authInviteCode.required = isSignup;
+            elements.authError.textContent = '';
+        }
+
+        async function logout() {
+            await fetch(apiUrl('/auth/logout'), { method: 'POST' });
+            elements.authOverlay.style.display = 'flex';
+            elements.userSession.style.display = 'none';
+            elements.authForm.reset();
+        }
+
         function validIpAddress(ip) {
             const ipv4PortPattern = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}:(\d{1,5})$/;
-            const port = parseInt(ip.split(':')[1], 10);
-            return ipv4PortPattern.test(ip) && port >= 0 && port <= 65535;
+            const hostnamePortPattern = /^(localhost|[a-zA-Z0-9.-]+):(\d{1,5})$/;
+            const match = ip.match(ipv4PortPattern) || ip.match(hostnamePortPattern);
+            const port = match ? parseInt(match[match.length - 1], 10) : NaN;
+            return Boolean(match) && port >= 0 && port <= 65535;
         }
 
         function getsonglist() {
-            fetch(`http://${ADDR}/songs`)
+            fetch(apiUrl('/songs'))
                 .then(response => response.json())
                 .then(data => {
                     songs = Object.values(data);
@@ -788,7 +981,6 @@
 
             lastLyricIndex = -1;
 
-            // Fetch or load audio from Web Cache API
             try {
                 const cache = await caches.open(CACHE_NAME);
                 let response = await cache.match(audioUrl);
@@ -803,7 +995,6 @@
                 const blob = await response.blob();
                 audioPlayer.src = URL.createObjectURL(blob);
             } catch (e) {
-                // Fallback to direct HTTP URL if Cache API fails
                 audioPlayer.src = audioUrl;
             }
 
@@ -830,7 +1021,7 @@
 
         function updateCacheDisplay() {
             if (audioPlayer.duration > 0 && audioPlayer.buffered.length > 0) {
-                // Get current buffer end range
+
                 const bufferedEnd = audioPlayer.buffered.end(audioPlayer.buffered.length - 1);
                 const duration = audioPlayer.duration;
                 const bufferedPercent = (bufferedEnd / duration) * 100;
